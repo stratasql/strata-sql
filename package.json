@@ -1,0 +1,302 @@
+{
+  "name": "strata-sql",
+  "displayName": "Strata SQL",
+  "description": "Model, govern and version your data as plain files in Git: a visual ER canvas with impact analysis, data load sequence, semantic layer and dbt / SQL import.",
+  "version": "0.1.2",
+  "homepage": "https://stratasql.com",
+  "icon": "media/icon.png",
+  "galleryBanner": { "color": "#1e1e1e", "theme": "dark" },
+  "publisher": "strata-sql",
+  "license": "Apache-2.0",
+  "config": { "npmName": "@stratasql/strata-sql" },
+  "keywords": [
+    "data modeling",
+    "data modelling",
+    "data model",
+    "ER diagram",
+    "entity relationship",
+    "schema",
+    "SQL",
+    "DDL",
+    "dbt",
+    "data governance",
+    "data lineage",
+    "data catalog",
+    "semantic layer",
+    "metrics",
+    "data warehouse",
+    "impact analysis",
+    "model as code",
+    "Git",
+    "LLM",
+    "Snowflake",
+    "BigQuery",
+    "Databricks",
+    "PostgreSQL",
+    "SQL Server",
+    "MySQL",
+    "Oracle",
+    "DuckDB",
+    "Airflow",
+    "Dagster"
+  ],
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "bugs": { "url": "https://github.com/stratasql/strata-sql/issues" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stratasql/strata-sql"
+  },
+  "categories": [
+    "Visualization",
+    "Data Science",
+    "Other"
+  ],
+  "main": "./extension.js",
+  "bin": {
+    "strata-sql": "cli.js"
+  },
+  "activationEvents": [
+    "onUri"
+  ],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "strata.modelEditor",
+        "displayName": "Strata SQL Model",
+        "selector": [
+          {
+            "filenamePattern": "*.model.json"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "strata.newProject",
+        "title": "Strata SQL: New Project"
+      },
+      {
+        "command": "strata.newModel",
+        "title": "Strata SQL: New Model"
+      },
+      {
+        "command": "strata.autoLayout",
+        "title": "Strata SQL: Auto Layout"
+      },
+      {
+        "command": "strata.undo",
+        "title": "Strata SQL: Undo Version"
+      },
+      {
+        "command": "strata.redo",
+        "title": "Strata SQL: Redo Version"
+      },
+      {
+        "command": "strata.openSettings",
+        "title": "Strata SQL: Settings"
+      },
+      {
+        "command": "strata.toggleNavigation",
+        "title": "Strata SQL: Toggle Navigation"
+      },
+      {
+        "command": "strata.toggleHistory",
+        "title": "Strata SQL: Toggle Version History"
+      },
+      {
+        "command": "strata.toggleAllPanels",
+        "title": "Strata SQL: Toggle All Panels"
+      },
+      {
+        "command": "strata.search",
+        "title": "Strata SQL: Search Model"
+      },
+      {
+        "command": "strata.help",
+        "title": "Strata SQL: Help"
+      },
+      {
+        "command": "strata.setEmbeddingKey",
+        "title": "Strata SQL: Set Embedding API Key"
+      },
+      {
+        "command": "strata.openLiveView",
+        "title": "Strata SQL: Open Live View in Browser"
+      },
+      {
+        "command": "strata.exportHtml",
+        "title": "Strata SQL: Export Interactive HTML"
+      },
+      {
+        "command": "strata.openSample",
+        "title": "Strata SQL: Open Sample Model"
+      },
+      {
+        "command": "strata.exportCode",
+        "title": "Strata SQL: Export ETL / ELT Code (Airflow, Dagster, Jupyter)"
+      },
+      {
+        "command": "strata.level.governance",
+        "title": "Strata SQL: Show Governance"
+      },
+      {
+        "command": "strata.level.conceptual",
+        "title": "Strata SQL: Show Conceptual Level"
+      },
+      {
+        "command": "strata.level.logical",
+        "title": "Strata SQL: Show Logical Level"
+      },
+      {
+        "command": "strata.level.physical",
+        "title": "Strata SQL: Show Physical Level"
+      },
+      {
+        "command": "strata.level.semantic",
+        "title": "Strata SQL: Show Semantic Level"
+      },
+      {
+        "command": "strata.splitIntoDomains",
+        "title": "Strata SQL: Split into Domains"
+      },
+      {
+        "command": "strata.joinParts",
+        "title": "Strata SQL: Join Parts"
+      },
+      {
+        "command": "strata.openProjectView",
+        "title": "Strata SQL: Open Project View"
+      },
+      {
+        "command": "strata.importDbt",
+        "title": "Strata SQL: Import from dbt…"
+      },
+      {
+        "command": "strata.syncDbt",
+        "title": "Strata SQL: Re-sync from dbt"
+      },
+      {
+        "command": "strata.importSql",
+        "title": "Strata SQL: Import from DDL…"
+      },
+      {
+        "command": "strata.syncSql",
+        "title": "Strata SQL: Re-sync from SQL scripts"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "strata.autoLayout",
+        "key": "ctrl+1",
+        "mac": "cmd+1",
+        "when": "activeCustomEditorId == 'strata.modelEditor'"
+      },
+      {
+        "command": "strata.toggleHistory",
+        "key": "ctrl+y",
+        "mac": "cmd+y",
+        "when": "activeCustomEditorId == 'strata.modelEditor'"
+      },
+      {
+        "command": "strata.toggleNavigation",
+        "key": "ctrl+l",
+        "mac": "cmd+l",
+        "when": "activeCustomEditorId == 'strata.modelEditor' || focusedView == 'strata.navigation'"
+      },
+      {
+        "command": "strata.toggleAllPanels",
+        "key": "ctrl+.",
+        "mac": "cmd+.",
+        "when": "activeCustomEditorId == 'strata.modelEditor' || focusedView == 'strata.navigation'"
+      },
+      {
+        "command": "strata.search",
+        "key": "ctrl+f",
+        "mac": "cmd+f",
+        "when": "activeCustomEditorId == 'strata.modelEditor'"
+      },
+      {
+        "command": "strata.help",
+        "key": "ctrl+f1",
+        "mac": "cmd+f1",
+        "when": "activeCustomEditorId == 'strata.modelEditor' || focusedView == 'strata.navigation'"
+      },
+      {
+        "command": "strata.level.governance",
+        "key": "ctrl+alt+g",
+        "mac": "cmd+alt+g",
+        "when": "activeCustomEditorId == 'strata.modelEditor' && !sideBarFocus && !panelFocus && !auxiliaryBarFocus"
+      },
+      {
+        "command": "strata.level.conceptual",
+        "key": "ctrl+alt+c",
+        "mac": "cmd+alt+c",
+        "when": "activeCustomEditorId == 'strata.modelEditor' && !sideBarFocus && !panelFocus && !auxiliaryBarFocus"
+      },
+      {
+        "command": "strata.level.logical",
+        "key": "ctrl+alt+l",
+        "mac": "cmd+alt+l",
+        "when": "activeCustomEditorId == 'strata.modelEditor' && !sideBarFocus && !panelFocus && !auxiliaryBarFocus"
+      },
+      {
+        "command": "strata.level.physical",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p",
+        "when": "activeCustomEditorId == 'strata.modelEditor' && !sideBarFocus && !panelFocus && !auxiliaryBarFocus"
+      },
+      {
+        "command": "strata.level.semantic",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+alt+s",
+        "when": "activeCustomEditorId == 'strata.modelEditor' && !sideBarFocus && !panelFocus && !auxiliaryBarFocus"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "strata.newProject",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@1"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "strata",
+          "title": "Strata SQL",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "strata": [
+        {
+          "type": "webview",
+          "id": "strata.navigation",
+          "name": "Model Navigator"
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.3.0",
+    "node-sql-parser": "^5.4.0"
+  },
+  "scripts": {
+    "live": "node live.js",
+    "build": "node scripts/build-vsce.js",
+    "publish:npm": "node scripts/publish-npm.js",
+    "publish:vsce": "node scripts/publish-vsce.js",
+    "install-ext": "npm run build && code --install-extension strata-sql-$(node -p \"require('./package.json').version\").vsix",
+    "clean": "rm -f *.vsix",
+    "cli:build": "node scripts/build-cli.js",
+    "check:builds": "node scripts/check-builds.js",
+    "release": "node scripts/publish.js",
+    "uninstall-ext": "code --uninstall-extension strata-sql.strata-sql"
+  }
+}

@@ -1,0 +1,4 @@
+country_code,country_name,iso3_code,description,is_active
+GB,United Kingdom,GBR,,true
+US,United States,USA,,true
+DE,Germany,DEU,,true

@@ -1,0 +1,3 @@
+id_scheme_code,id_scheme_name,scheme_uri,description,is_active
+LEI,Legal Entity Identifier,http://www.fpml.org/coding-scheme/external/iso17442,,true
+UTI,Unique Trade Identifier,http://www.fpml.org/coding-scheme/external/unique-transaction-identifier,,true

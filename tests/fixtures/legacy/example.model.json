@@ -1,0 +1,336 @@
+{
+  "strata": 2,
+  "project": {
+    "name": "Sales Warehouse",
+    "description": "Order-to-cash warehouse",
+    "technology": "Databricks",
+    "methodology": "ER - 3NF",
+    "naming": "catalog.schema.table",
+    "stakeholders": [{"name": "Ada Lovelace", "role": "Data Architect", "email": "ada@corp.io"}],
+    "governance": {
+      "policies": ["Data Protection"],
+      "conceptual": {"owner": "Chief Data Officer"},
+      "logical": {"owner": "Data Architecture"},
+      "physical": {"owner": "Data Platform", "steward": "Data Engineering"},
+      "semantic": {"owner": "Finance"}
+    }
+  },
+  "governance": {
+    "tags": [
+      {
+        "name": "certified",
+        "displayName": "Certified",
+        "description": "Checked and approved for reporting.",
+        "owner": "Finance",
+        "domain": "Reporting",
+        "enabled": true
+      },
+      {
+        "name": "pii",
+        "displayName": "Personal Data",
+        "description": "Identifies a natural person",
+        "owner": "privacy@corp.io",
+        "domain": "Customer",
+        "policies": ["GDPR"],
+        "enabled": true
+      }
+    ],
+    "propertyKeys": ["organization_unit"],
+    "policies": [
+      {
+        "name": "Customer Data",
+        "parents": ["GDPR", "Retention 7 Years"],
+        "type": "business",
+        "owner": "Head of Sales",
+        "description": "How customer records are collected, used and kept: the personal data rules plus the retention of order history."
+      },
+      {
+        "name": "Data Protection",
+        "type": "security",
+        "owner": "Security Office",
+        "description": "Personal and confidential data: least-privilege access, and reads are logged."
+      },
+      {
+        "name": "Financial Records",
+        "parents": ["Retention 7 Years"],
+        "type": "regulatory",
+        "classification": "Confidential",
+        "owner": "Finance",
+        "description": "Amounts used in financial statements: changes are controlled and reconciled monthly."
+      },
+      {
+        "name": "GDPR",
+        "parents": ["Data Protection"],
+        "type": "privacy",
+        "jurisdiction": "EU",
+        "classification": "Restricted",
+        "owner": "Privacy Officer",
+        "description": "EU General Data Protection Regulation: a lawful basis for processing, data-subject rights, breach notification within 72 hours."
+      },
+      {
+        "name": "Mask Personal Data",
+        "parents": ["GDPR"],
+        "type": "protection",
+        "owner": "Data Platform",
+        "description": "Personal data is masked for everyone outside customer service."
+      },
+      {
+        "name": "Retention 7 Years",
+        "type": "retention",
+        "owner": "Finance",
+        "description": "Kept for 7 years after the order date, then deleted."
+      }
+    ]
+  },
+  "conceptual": {
+    "concepts": [
+      {"name": "Country", "description": "Where a customer is based."},
+      {
+        "name": "Customer",
+        "description": "A person or company that buys from us.",
+        "governance": {
+          "owner": "Head of Sales",
+          "steward": "Customer Data Steward",
+          "classification": "Confidential",
+          "criticality": "High",
+          "lifecycle": "Active",
+          "policies": ["Customer Data"]
+        }
+      },
+      {
+        "name": "Order",
+        "description": "A purchase placed by a customer, with its lines.",
+        "governance": {"owner": "Head of Sales", "criticality": "Critical", "lifecycle": "Active"}
+      },
+      {"name": "Product", "description": "Something we sell."}
+    ],
+    "relationships": [
+      {"parent": "Country", "child": "Customer", "cardinality": "1..M", "name": "is home of"},
+      {
+        "parent": "Customer",
+        "child": "Order",
+        "cardinality": "1..M",
+        "name": "places",
+        "description": "A customer places many orders; an order belongs to exactly one customer."
+      },
+      {
+        "parent": "Customer",
+        "child": "Product",
+        "cardinality": "M..M",
+        "name": "buys",
+        "description": "Customers buy many products and products are bought by many customers."
+      },
+      {"parent": "Product", "child": "Order", "cardinality": "1..M", "name": "appears on"}
+    ]
+  },
+  "logical": {
+    "entities": [
+      {"name": "Country", "concept": "Country", "description": "ISO country reference list."},
+      {"name": "Customer", "concept": "Customer", "description": "A person or company that buys from us."},
+      {
+        "name": "Order",
+        "concept": "Order",
+        "description": "A purchase placed by a customer.",
+        "governance": {"owner": "Sales Data Architect", "criticality": "Critical"}
+      },
+      {"name": "Order Line", "concept": "Order", "description": "One product line on an order."},
+      {"name": "Product", "concept": "Product", "description": "Something we sell."}
+    ],
+    "relationships": [
+      {"parent": "Country", "child": "Customer", "cardinality": "1..M"},
+      {
+        "parent": "Customer",
+        "child": "Order",
+        "cardinality": "1..M",
+        "name": "places",
+        "description": "A customer places many orders; an order belongs to exactly one customer."
+      },
+      {
+        "parent": "Customer",
+        "child": "Product",
+        "cardinality": "M..M",
+        "name": "buys",
+        "description": "Customers buy many products and products are bought by many customers."
+      },
+      {"parent": "Order", "child": "Order Line", "cardinality": "1..M"},
+      {"parent": "Product", "child": "Order Line", "cardinality": "1..M"}
+    ]
+  },
+  "catalogs": [{"name": "main", "governance": {"classification": "Internal"}}],
+  "schemas": [
+    {"name": "ref", "catalog": "main", "governance": {"classification": "Public"}},
+    {
+      "name": "sales",
+      "catalog": "main",
+      "governance": {"owner": "Sales Ops", "steward": "Sales Data Steward", "policies": ["Mask Personal Data"]}
+    }
+  ],
+  "tables": [
+    {
+      "name": "country",
+      "schema": "main.ref",
+      "entity": "Country",
+      "displayName": "Country",
+      "description": "ISO country reference list.",
+      "sla": {"exclude": true},
+      "columns": [{"name": "id", "type": "INT", "pk": true}, {"name": "iso", "type": "STRING", "unique": true}]
+    },
+    {
+      "name": "customer",
+      "schema": "main.sales",
+      "entity": "Customer",
+      "displayName": "Customer",
+      "description": "A person or company that buys from us.",
+      "properties": {"organization_unit": "Commercial"},
+      "sla": {"frequency": "daily", "time": "06:00"},
+      "columns": [
+        {"name": "id", "type": "BIGINT", "pk": true},
+        {"name": "name", "displayName": "Customer Name", "type": "STRING", "notNull": true, "tags": ["pii"]},
+        {"name": "country_id", "type": "INT"}
+      ]
+    },
+    {
+      "name": "customer_orders_mv",
+      "kind": "view",
+      "viewType": "materialized",
+      "schema": "main.sales",
+      "displayName": "Customer Orders (MV)",
+      "description": "Order totals per customer, refreshed nightly.",
+      "governance": {"off": ["Mask Personal Data"]},
+      "sla": {"frequency": "daily", "time": "08:00"},
+      "definition": "SELECT customer_id, COUNT(*) AS order_count, SUM(total) AS total_spent\nFROM main.sales.orders\nGROUP BY customer_id",
+      "columns": [
+        {"name": "customer_id", "type": "BIGINT"},
+        {"name": "order_count", "type": "BIGINT"},
+        {"name": "total_spent", "type": "DECIMAL(18,2)"}
+      ]
+    },
+    {
+      "name": "customer_product",
+      "schema": "main.sales",
+      "displayName": "Customer Product",
+      "description": "Bridge table for customers and the products they buy.",
+      "governance": {"lifecycle": "Proposed"},
+      "sla": {"frequency": "weekly", "time": "08:00"},
+      "columns": [{"name": "customer_id", "type": "BIGINT", "pk": true}, {"name": "product_id", "type": "BIGINT", "pk": true}]
+    },
+    {
+      "name": "order_item",
+      "schema": "main.sales",
+      "entity": "Order Line",
+      "displayName": "Order Line",
+      "description": "One product line on an order.",
+      "sla": {"frequency": "daily", "time": "07:30"},
+      "columns": [
+        {"name": "id", "type": "BIGINT", "pk": true},
+        {"name": "order_id", "type": "BIGINT"},
+        {"name": "product_id", "type": "BIGINT"}
+      ]
+    },
+    {
+      "name": "orders",
+      "schema": "main.sales",
+      "entity": "Order",
+      "displayName": "Sales Order",
+      "description": "A purchase placed by a customer.",
+      "governance": {"criticality": "Critical", "policies": ["Financial Records"]},
+      "sla": {"frequency": "daily", "time": "07:00"},
+      "columns": [
+        {"name": "id", "type": "BIGINT", "pk": true},
+        {"name": "customer_id", "type": "BIGINT", "notNull": true},
+        {"name": "total", "type": "DECIMAL(18,2)", "default": "0", "governance": {"classification": "Confidential"}}
+      ]
+    },
+    {
+      "name": "product",
+      "schema": "main.sales",
+      "entity": "Product",
+      "displayName": "Product",
+      "description": "Something we sell.",
+      "sla": {"frequency": "daily", "time": "05:00"},
+      "columns": [{"name": "id", "type": "BIGINT", "pk": true}, {"name": "sku", "type": "STRING", "unique": true}]
+    }
+  ],
+  "relationships": [
+    {"parent": "main.ref.country.id", "child": "main.sales.customer.country_id", "cardinality": "1..M"},
+    {"parent": "main.sales.customer.id", "child": "main.sales.customer_product.customer_id", "cardinality": "1..M"},
+    {
+      "parent": "main.sales.customer.id",
+      "child": "main.sales.orders.customer_id",
+      "cardinality": "1..M",
+      "name": "places",
+      "description": "A customer places many orders; an order belongs to exactly one customer."
+    },
+    {
+      "parent": "main.sales.customer",
+      "child": "main.sales.product",
+      "cardinality": "M..M",
+      "name": "buys",
+      "description": "Customers buy many products and products are bought by many customers.",
+      "via": "main.sales.customer_product"
+    },
+    {"parent": "main.sales.orders.id", "child": "main.sales.order_item.order_id", "cardinality": "1..M"},
+    {"parent": "main.sales.product.id", "child": "main.sales.customer_product.product_id", "cardinality": "1..M"},
+    {"parent": "main.sales.product.id", "child": "main.sales.order_item.product_id", "cardinality": "1..M"}
+  ],
+  "semantic": {
+    "metrics": [
+      {
+        "name": "Active Customers",
+        "description": "Customers who placed at least one order.",
+        "calculation": "orders.customer_id",
+        "aggregation": "count_distinct",
+        "grain": ["Customer"],
+        "governance": {"owner": "Sales Ops", "lifecycle": "Proposed"}
+      },
+      {
+        "name": "Average Order Value",
+        "description": "What a customer spends on one order on average.",
+        "calculation": "{Sales Amount} / {Order Count}",
+        "aggregation": "none",
+        "grain": ["Order"],
+        "tags": ["certified"]
+      },
+      {
+        "name": "Order Count",
+        "description": "Number of orders placed.",
+        "calculation": "orders.id",
+        "aggregation": "count_distinct",
+        "grain": ["Order"],
+        "tags": ["certified"],
+        "governance": {"owner": "Sales Ops"}
+      },
+      {
+        "name": "Sales Amount",
+        "description": "Value of the orders placed (order totals).",
+        "calculation": "orders.total",
+        "aggregation": "sum",
+        "grain": ["Order"],
+        "tags": ["certified"],
+        "governance": {"classification": "Confidential"}
+      }
+    ]
+  },
+  "alignment": {"acknowledged": ["gov-off:main.sales.customer_orders_mv:Mask Personal Data"]},
+  "layout": {
+    "conceptual": {"Country": [0, 0], "Customer": [370, 0], "Order": [370, 158], "Product": [0, 158]},
+    "logical": {"Country": [0, 282], "Customer": [0, 0], "Order": [390, 0], "Order Line": [760, 0], "Product": [390, 282]},
+    "physical": {
+      "main.ref.country": [0, 0],
+      "main.sales.customer": [0, 353],
+      "main.sales.customer_orders_mv": [0, 525],
+      "main.sales.customer_product": [740, 258],
+      "main.sales.order_item": [740, 406],
+      "main.sales.orders": [370, 486],
+      "main.sales.product": [370, 338]
+    },
+    "semantic": {
+      "Active Customers": [0, 332],
+      "Average Order Value": [370, 692],
+      "main.sales.orders": [0, 0],
+      "Order Count": [0, 704],
+      "Sales Amount": [0, 828]
+    }
+  },
+  "version": {"modelling": "m3", "governance": "g4", "semantic": "s1"}
+}

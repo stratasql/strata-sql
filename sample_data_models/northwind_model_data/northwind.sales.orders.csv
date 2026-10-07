@@ -1,0 +1,2 @@
+order_id,customer_id,employee_id,order_date,required_date,shipped_date,shipper_id,freight,ship_name,ship_address_id
+10248,VINET,5,1996-07-04,1996-08-01,1996-07-16,3,32.38,Vins et alcools Chevalier,4

@@ -1,0 +1,1329 @@
+{
+ "metadata": {
+  "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12.json",
+  "dbt_version": "1.9.4",
+  "generated_at": "2026-09-29T20:59:00Z",
+  "project_name": "northwind",
+  "adapter_type": "postgres"
+ },
+ "nodes": {
+  "model.northwind.stg_products": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "stg_products",
+   "alias": "stg_products",
+   "schema": "public",
+   "database": "alphageek",
+   "unique_id": "model.northwind.stg_products",
+   "original_file_path": "models/staging/stg_products.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/staging/stg_products.sql\r\n\r\nselect\r\n    product_id,\r\n    product_name,\r\n    supplier_id,\r\n    category_id,\r\n    quantity_per_unit,\r\n    unit_price,\r\n    units_in_stock,\r\n    units_on_order,\r\n    reorder_level,\r\n    discontinued\r\nfrom\r\n    {{ ref('raw_products') }}",
+   "relation_name": "\"alphageek\".\"public\".\"stg_products\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "view"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.raw_products"
+    ]
+   }
+  },
+  "model.northwind.stg_customers": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "stg_customers",
+   "alias": "stg_customers",
+   "schema": "public",
+   "database": "alphageek",
+   "unique_id": "model.northwind.stg_customers",
+   "original_file_path": "models/staging/stg_customers.sql",
+   "tags": [],
+   "description": "View de clientes em stg",
+   "columns": {
+    "customer_id": {
+     "name": "customer_id",
+     "description": "ID único do cliente",
+     "meta": {},
+     "data_type": null,
+     "constraints": [],
+     "quote": null,
+     "config": {
+      "meta": {},
+      "tags": []
+     },
+     "tags": [],
+     "granularity": null,
+     "dimension": null,
+     "entity": null,
+     "doc_blocks": [],
+     "type": "integer"
+    },
+    "company_name": {
+     "name": "company_name",
+     "description": "Nome da empresa",
+     "meta": {},
+     "data_type": "varchar",
+     "constraints": [],
+     "quote": null,
+     "config": {
+      "meta": {},
+      "tags": []
+     },
+     "tags": [],
+     "granularity": null,
+     "dimension": null,
+     "entity": null,
+     "doc_blocks": []
+    }
+   },
+   "meta": {
+    "owner": "postgres",
+    "type": "view",
+    "package": "northwind",
+    "qualquer_coisa": "teste",
+    "language": "sql",
+    "relation": "postgres.public.raw_customers",
+    "access": "protected",
+    "version": "1.0",
+    "contract": "Enforced"
+   },
+   "raw_code": "-- models/staging/stg_customers.sql\r\n\r\nselect\r\n    customer_id,\r\n    company_name,\r\n    contact_name,\r\n    contact_title,\r\n    address,\r\n    city,\r\n    region,\r\n    postal_code,\r\n    country,\r\n    phone,\r\n    fax\r\nfrom\r\n    {{ ref('raw_customers') }}",
+   "relation_name": "\"alphageek\".\"public\".\"stg_customers\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "view"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.raw_customers"
+    ]
+   }
+  },
+  "model.northwind.stg_order_details": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "stg_order_details",
+   "alias": "stg_order_details",
+   "schema": "public",
+   "database": "alphageek",
+   "unique_id": "model.northwind.stg_order_details",
+   "original_file_path": "models/staging/stg_order_details.sql",
+   "tags": [],
+   "description": "Tabela de detalhes dos pedidos",
+   "columns": {
+    "order_id": {
+     "name": "order_id",
+     "description": "ID do pedido",
+     "meta": {},
+     "data_type": null,
+     "constraints": [],
+     "quote": null,
+     "config": {
+      "meta": {},
+      "tags": []
+     },
+     "tags": [],
+     "granularity": null,
+     "dimension": null,
+     "entity": null,
+     "doc_blocks": []
+    },
+    "product_id": {
+     "name": "product_id",
+     "description": "ID do produto",
+     "meta": {},
+     "data_type": null,
+     "constraints": [],
+     "quote": null,
+     "config": {
+      "meta": {},
+      "tags": []
+     },
+     "tags": [],
+     "granularity": null,
+     "dimension": null,
+     "entity": null,
+     "doc_blocks": []
+    },
+    "unit_price": {
+     "name": "unit_price",
+     "description": "Preço unitário",
+     "meta": {},
+     "data_type": null,
+     "constraints": [],
+     "quote": null,
+     "config": {
+      "meta": {},
+      "tags": []
+     },
+     "tags": [],
+     "granularity": null,
+     "dimension": null,
+     "entity": null,
+     "doc_blocks": []
+    },
+    "quantity": {
+     "name": "quantity",
+     "description": "Quantidade",
+     "meta": {},
+     "data_type": null,
+     "constraints": [],
+     "quote": null,
+     "config": {
+      "meta": {},
+      "tags": []
+     },
+     "tags": [],
+     "granularity": null,
+     "dimension": null,
+     "entity": null,
+     "doc_blocks": []
+    }
+   },
+   "meta": {},
+   "raw_code": "-- models/staging/stg_order_details.sql\r\n\r\nselect\r\n    order_id,\r\n    product_id,\r\n    unit_price,\r\n    quantity,\r\n    discount\r\nfrom\r\n    {{ ref('raw_order_details') }}",
+   "relation_name": "\"alphageek\".\"public\".\"stg_order_details\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "view"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.raw_order_details"
+    ]
+   }
+  },
+  "model.northwind.stg_orders": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "stg_orders",
+   "alias": "stg_orders",
+   "schema": "public",
+   "database": "alphageek",
+   "unique_id": "model.northwind.stg_orders",
+   "original_file_path": "models/staging/stg_orders.sql",
+   "tags": [],
+   "description": "Tabela de pedidos do estágio",
+   "columns": {
+    "order_id": {
+     "name": "order_id",
+     "description": "ID único do pedido",
+     "meta": {},
+     "data_type": null,
+     "constraints": [],
+     "quote": null,
+     "config": {
+      "meta": {},
+      "tags": []
+     },
+     "tags": [],
+     "granularity": null,
+     "dimension": null,
+     "entity": null,
+     "doc_blocks": []
+    },
+    "customer_id": {
+     "name": "customer_id",
+     "description": "ID do cliente que fez o pedido",
+     "meta": {},
+     "data_type": null,
+     "constraints": [],
+     "quote": null,
+     "config": {
+      "meta": {},
+      "tags": []
+     },
+     "tags": [],
+     "granularity": null,
+     "dimension": null,
+     "entity": null,
+     "doc_blocks": []
+    }
+   },
+   "meta": {},
+   "raw_code": "-- models/staging/stg_orders.sql\r\n\r\nselect\r\n    order_id,\r\n    customer_id,\r\n    employee_id,\r\n    order_date,\r\n    required_date,\r\n    shipped_date,\r\n    ship_via,\r\n    freight,\r\n    ship_name,\r\n    ship_address,\r\n    ship_city,\r\n    ship_region,\r\n    ship_postal_code,\r\n    ship_country\r\nfrom\r\n    {{ ref('raw_orders') }}",
+   "relation_name": "\"alphageek\".\"public\".\"stg_orders\"",
+   "constraints": [
+    {
+     "type": "foreign_key",
+     "columns": [
+      "employee_id"
+     ],
+     "to": "ref('employees')",
+     "to_columns": [
+      "employee_id"
+     ]
+    }
+   ],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "view"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.raw_orders"
+    ]
+   }
+  },
+  "model.northwind.raw_order_details": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "raw_order_details",
+   "alias": "raw_order_details",
+   "schema": "public",
+   "database": "alphageek",
+   "unique_id": "model.northwind.raw_order_details",
+   "original_file_path": "models/raw/raw_order_details.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/order_details.sql\r\nselect * from order_details  -- Substitua 'order_details' pelo nome real da tabela no seu banco de dados.",
+   "relation_name": "\"alphageek\".\"public\".\"raw_order_details\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "view"
+   },
+   "depends_on": {
+    "nodes": []
+   }
+  },
+  "model.northwind.raw_customers": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "raw_customers",
+   "alias": "raw_customers",
+   "schema": "public",
+   "database": "alphageek",
+   "unique_id": "model.northwind.raw_customers",
+   "original_file_path": "models/raw/raw_customers.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/orders.sql\r\nselect * from customers",
+   "relation_name": "\"alphageek\".\"public\".\"raw_customers\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "view"
+   },
+   "depends_on": {
+    "nodes": []
+   }
+  },
+  "model.northwind.raw_products": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "raw_products",
+   "alias": "raw_products",
+   "schema": "public",
+   "database": "alphageek",
+   "unique_id": "model.northwind.raw_products",
+   "original_file_path": "models/raw/raw_products.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/products.sql\r\nselect * from products",
+   "relation_name": "\"alphageek\".\"public\".\"raw_products\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "view"
+   },
+   "depends_on": {
+    "nodes": []
+   }
+  },
+  "model.northwind.raw_orders": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "raw_orders",
+   "alias": "raw_orders",
+   "schema": "public",
+   "database": "alphageek",
+   "unique_id": "model.northwind.raw_orders",
+   "original_file_path": "models/raw/raw_orders.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/orders.sql\r\nselect * from orders  -- Substitua 'orders' pelo nome real da tabela no seu banco de dados.",
+   "relation_name": "\"alphageek\".\"public\".\"raw_orders\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "view"
+   },
+   "depends_on": {
+    "nodes": []
+   }
+  },
+  "model.northwind.report_top_10_products": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "report_top_10_products",
+   "alias": "report_top_10_products",
+   "schema": "public_gold",
+   "database": "alphageek",
+   "unique_id": "model.northwind.report_top_10_products",
+   "original_file_path": "models/reports/report_top_10_products.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/reporting/top_10_products.sql\r\n\r\n{{ config(\r\n    schema='gold',\r\n    materialized='table'\r\n) }}\r\n\r\nselect\r\n    products.product_name, \r\n    sum(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount)) as sales\r\nfrom \r\n    {{ ref('stg_products') }} as products\r\ninner join \r\n    {{ ref('stg_order_details') }} as order_details on order_details.product_id = products.product_id\r\ngroup by \r\n    products.product_name\r\norder by \r\n    sales desc\r\nlimit 10",
+   "relation_name": "\"alphageek\".\"public_gold\".\"report_top_10_products\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "table",
+    "schema": "gold"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_products",
+     "model.northwind.stg_order_details"
+    ]
+   }
+  },
+  "model.northwind.report_total_revenues_1997": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "report_total_revenues_1997",
+   "alias": "report_total_revenues_1997",
+   "schema": "public_gold",
+   "database": "alphageek",
+   "unique_id": "model.northwind.report_total_revenues_1997",
+   "original_file_path": "models/reports/report_total_revenues_1997.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/reporting/report_total_revenues_1997.sql\r\n\r\n{{ config(\r\n    schema='gold',\r\n    materialized='table'\r\n) }}\r\n\r\nwith ord as (\r\n    select order_id \r\n    from {{ ref('stg_orders') }}\r\n    where extract(year from order_date) = 1997\r\n)\r\nselect \r\n    sum(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount)) as total_revenues_1997\r\nfrom \r\n    {{ ref('stg_order_details') }} as order_details\r\ninner join \r\n    ord on ord.order_id = order_details.order_id",
+   "relation_name": "\"alphageek\".\"public_gold\".\"report_total_revenues_1997\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "table",
+    "schema": "gold"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_orders",
+     "model.northwind.stg_order_details"
+    ]
+   }
+  },
+  "model.northwind.report_uk_clients_who_pay_more_than_1000": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "report_uk_clients_who_pay_more_than_1000",
+   "alias": "report_uk_clients_who_pay_more_than_1000",
+   "schema": "public_gold",
+   "database": "alphageek",
+   "unique_id": "model.northwind.report_uk_clients_who_pay_more_than_1000",
+   "original_file_path": "models/reports/report_uk_clients_who_pay_more_than_1000.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/reporting/uk_clients_who_pay_more_than_1000.sql\r\n\r\n{{ config(\r\n    schema='gold',\r\n    materialized='table'\r\n) }}\r\n\r\nselect \r\n    customers.contact_name, \r\n    sum(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount) * 100) / 100 as payments\r\nfrom \r\n    {{ ref('stg_customers') }} as customers\r\ninner join \r\n    {{ ref('stg_orders') }} as orders on orders.customer_id = customers.customer_id\r\ninner join \r\n    {{ ref('stg_order_details') }} as order_details on order_details.order_id = orders.order_id\r\nwhere \r\n    lower(customers.country) = 'uk'\r\ngroup by \r\n    customers.contact_name\r\nhaving \r\n    sum(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount)) > 1000",
+   "relation_name": "\"alphageek\".\"public_gold\".\"report_uk_clients_who_pay_more_than_1000\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "table",
+    "schema": "gold"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_customers",
+     "model.northwind.stg_orders",
+     "model.northwind.stg_order_details"
+    ]
+   }
+  },
+  "model.northwind.report_customers": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "report_customers",
+   "alias": "report_customers",
+   "schema": "public_gold",
+   "database": "alphageek",
+   "unique_id": "model.northwind.report_customers",
+   "original_file_path": "models/reports/report_customers.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/reporting/clients_to_marketing.sql\r\n\r\n{{ config(\r\n    schema='gold',\r\n    materialized='table'\r\n) }}\r\n\r\nselect * from {{ref('raw_customers')}}",
+   "relation_name": "\"alphageek\".\"public_gold\".\"report_customers\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "table",
+    "schema": "gold"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.raw_customers"
+    ]
+   }
+  },
+  "model.northwind.report_receitas_acumuladas": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "report_receitas_acumuladas",
+   "alias": "report_receitas_acumuladas",
+   "schema": "public_gold",
+   "database": "alphageek",
+   "unique_id": "model.northwind.report_receitas_acumuladas",
+   "original_file_path": "models/reports/report_receitas_acumuladas.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/view_receitas_acumuladas.sql\r\n\r\n{{ config(\r\n    schema='gold',\r\n    materialized='table'\r\n) }}\r\n\r\nwith receitas_mensais as (\r\n    select\r\n        extract(year from orders.order_date) as ano,\r\n        extract(month from orders.order_date) as mes,\r\n        sum(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount)) as receita_mensal\r\n    from\r\n        {{ ref('stg_orders') }} as orders\r\n    inner join\r\n        {{ ref('stg_order_details') }} as order_details on orders.order_id = order_details.order_id\r\n    group by\r\n        extract(year from orders.order_date),\r\n        extract(month from orders.order_date)\r\n),\r\nreceitas_acumuladas as (\r\n    select\r\n        ano,\r\n        mes,\r\n        receita_mensal,\r\n        sum(receita_mensal) over (partition by ano order by mes) as receita_ytd\r\n    from\r\n        receitas_mensais\r\n)\r\nselect\r\n    ano,\r\n    mes,\r\n    receita_mensal,\r\n    receita_mensal - lag(receita_mensal) over (partition by ano order by mes) as diferenca_mensal,\r\n    receita_ytd,\r\n    (receita_mensal - lag(receita_mensal) over (partition by ano order by mes)) / lag(receita_mensal) over (partition by ano order by mes) * 100 as percentual_mudanca_mensal\r\nfrom\r\n    receitas_acumuladas\r\norder by\r\n    ano, mes",
+   "relation_name": "\"alphageek\".\"public_gold\".\"report_receitas_acumuladas\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "table",
+    "schema": "gold"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_orders",
+     "model.northwind.stg_order_details"
+    ]
+   }
+  },
+  "model.northwind.report_total_revenues_per_customer": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "report_total_revenues_per_customer",
+   "alias": "report_total_revenues_per_customer",
+   "schema": "public_gold",
+   "database": "alphageek",
+   "unique_id": "model.northwind.report_total_revenues_per_customer",
+   "original_file_path": "models/reports/report_total_revenues_per_customer.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/reporting/view_total_revenues_per_customer.sql\r\n\r\n{{ config(\r\n    schema='gold',\r\n    materialized='table'\r\n) }}\r\n\r\nselect \r\n    customers.company_name, \r\n    sum(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount)) as total\r\nfrom \r\n    {{ ref('stg_customers') }} as customers\r\ninner join \r\n    {{ ref('stg_orders') }} as orders on customers.customer_id = orders.customer_id\r\ninner join \r\n    {{ ref('stg_order_details') }} as order_details on order_details.order_id = orders.order_id\r\ngroup by \r\n    customers.company_name\r\norder by \r\n    total desc",
+   "relation_name": "\"alphageek\".\"public_gold\".\"report_total_revenues_per_customer\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "table",
+    "schema": "gold"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_customers",
+     "model.northwind.stg_orders",
+     "model.northwind.stg_order_details"
+    ]
+   }
+  },
+  "model.northwind.report_clients_to_marketing": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "report_clients_to_marketing",
+   "alias": "report_clients_to_marketing",
+   "schema": "public_gold",
+   "database": "alphageek",
+   "unique_id": "model.northwind.report_clients_to_marketing",
+   "original_file_path": "models/reports/report_clients_to_marketing.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/reporting/clients_to_marketing.sql\r\n\r\n{{ config(\r\n    schema='gold',\r\n    materialized='table'\r\n) }}\r\n\r\nwith clientes_para_marketing as (\r\n    select \r\n        customers.company_name, \r\n        sum(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount)) as total,\r\n        ntile(5) over (order by sum(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount)) desc) as group_number\r\n    from \r\n        {{ ref('stg_customers') }} as customers\r\n    inner join \r\n        {{ ref('stg_orders') }} as orders on customers.customer_id = orders.customer_id\r\n    inner join \r\n        {{ ref('stg_order_details') }} as order_details on order_details.order_id = orders.order_id\r\n    group by \r\n        customers.company_name\r\n    order by \r\n        total desc\r\n)\r\nselect *\r\nfrom clientes_para_marketing\r\nwhere group_number >= 3",
+   "relation_name": "\"alphageek\".\"public_gold\".\"report_clients_to_marketing\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "table",
+    "schema": "gold"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_customers",
+     "model.northwind.stg_orders",
+     "model.northwind.stg_order_details"
+    ]
+   }
+  },
+  "model.northwind.report_total_revenues_per_customer_group": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "report_total_revenues_per_customer_group",
+   "alias": "report_total_revenues_per_customer_group",
+   "schema": "public_gold",
+   "database": "alphageek",
+   "unique_id": "model.northwind.report_total_revenues_per_customer_group",
+   "original_file_path": "models/reports/report_total_revenues_per_customer_group.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "-- models/reporting/view_total_revenues_per_customer_group.sql\r\n\r\n{{ config(\r\n    schema='gold',\r\n    materialized='table'\r\n) }}\r\n\r\nselect \r\n    customers.company_name, \r\n    sum(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount)) as total,\r\n    ntile(5) over (order by sum(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount)) desc) as group_number\r\nfrom \r\n    {{ ref('stg_customers') }} as customers\r\ninner join \r\n    {{ ref('stg_orders') }} as orders on customers.customer_id = orders.customer_id\r\ninner join \r\n    {{ ref('stg_order_details') }} as order_details on order_details.order_id = orders.order_id\r\ngroup by \r\n    customers.company_name\r\norder by \r\n    total desc",
+   "relation_name": "\"alphageek\".\"public_gold\".\"report_total_revenues_per_customer_group\"",
+   "constraints": [],
+   "group": null,
+   "language": "sql",
+   "config": {
+    "materialized": "table",
+    "schema": "gold"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_customers",
+     "model.northwind.stg_orders",
+     "model.northwind.stg_order_details"
+    ]
+   }
+  },
+  "test.northwind.not_null_stg_orders_order_id.81cfe2fe64": {
+   "resource_type": "test",
+   "package_name": "northwind",
+   "name": "not_null_stg_orders_order_id",
+   "alias": "not_null_stg_orders_order_id",
+   "schema": "public_dbt_test__audit",
+   "database": "alphageek",
+   "unique_id": "test.northwind.not_null_stg_orders_order_id.81cfe2fe64",
+   "original_file_path": "models/staging/_crm__models.yml",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "{{ test_not_null(**_dbt_generic_test_kwargs) }}",
+   "relation_name": null,
+   "group": null,
+   "test_metadata": {
+    "name": "not_null",
+    "kwargs": {
+     "column_name": "order_id",
+     "model": "{{ get_where_subquery(ref('stg_orders')) }}"
+    },
+    "namespace": null
+   },
+   "column_name": "order_id",
+   "attached_node": "model.northwind.stg_orders",
+   "language": "sql",
+   "config": {
+    "materialized": "test",
+    "schema": "dbt_test__audit"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_orders"
+    ]
+   }
+  },
+  "test.northwind.unique_stg_orders_order_id.e3b841c71a": {
+   "resource_type": "test",
+   "package_name": "northwind",
+   "name": "unique_stg_orders_order_id",
+   "alias": "unique_stg_orders_order_id",
+   "schema": "public_dbt_test__audit",
+   "database": "alphageek",
+   "unique_id": "test.northwind.unique_stg_orders_order_id.e3b841c71a",
+   "original_file_path": "models/staging/_crm__models.yml",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "{{ test_unique(**_dbt_generic_test_kwargs) }}",
+   "relation_name": null,
+   "group": null,
+   "test_metadata": {
+    "name": "unique",
+    "kwargs": {
+     "column_name": "order_id",
+     "model": "{{ get_where_subquery(ref('stg_orders')) }}"
+    },
+    "namespace": null
+   },
+   "column_name": "order_id",
+   "attached_node": "model.northwind.stg_orders",
+   "language": "sql",
+   "config": {
+    "materialized": "test",
+    "schema": "dbt_test__audit"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_orders"
+    ]
+   }
+  },
+  "test.northwind.not_null_stg_orders_customer_id.af79d5e4b5": {
+   "resource_type": "test",
+   "package_name": "northwind",
+   "name": "not_null_stg_orders_customer_id",
+   "alias": "not_null_stg_orders_customer_id",
+   "schema": "public_dbt_test__audit",
+   "database": "alphageek",
+   "unique_id": "test.northwind.not_null_stg_orders_customer_id.af79d5e4b5",
+   "original_file_path": "models/staging/_crm__models.yml",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "{{ test_not_null(**_dbt_generic_test_kwargs) }}",
+   "relation_name": null,
+   "group": null,
+   "test_metadata": {
+    "name": "not_null",
+    "kwargs": {
+     "column_name": "customer_id",
+     "model": "{{ get_where_subquery(ref('stg_orders')) }}"
+    },
+    "namespace": null
+   },
+   "column_name": "customer_id",
+   "attached_node": "model.northwind.stg_orders",
+   "language": "sql",
+   "config": {
+    "materialized": "test",
+    "schema": "dbt_test__audit"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_orders"
+    ]
+   }
+  },
+  "test.northwind.relationships_stg_orders_customer_id__customer_id__ref_stg_customers_.430bf21500": {
+   "resource_type": "test",
+   "package_name": "northwind",
+   "name": "relationships_stg_orders_customer_id__customer_id__ref_stg_customers_",
+   "alias": "relationships_stg_orders_96411fe0c89b49c3f4da955dfd358ba0",
+   "schema": "public_dbt_test__audit",
+   "database": "alphageek",
+   "unique_id": "test.northwind.relationships_stg_orders_customer_id__customer_id__ref_stg_customers_.430bf21500",
+   "original_file_path": "models/staging/_crm__models.yml",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "{{ test_relationships(**_dbt_generic_test_kwargs) }}{{ config(alias=\"relationships_stg_orders_96411fe0c89b49c3f4da955dfd358ba0\") }}",
+   "relation_name": null,
+   "group": null,
+   "test_metadata": {
+    "name": "relationships",
+    "kwargs": {
+     "to": "ref('stg_customers')",
+     "field": "customer_id",
+     "column_name": "customer_id",
+     "model": "{{ get_where_subquery(ref('stg_orders')) }}"
+    },
+    "namespace": null
+   },
+   "column_name": "customer_id",
+   "attached_node": "model.northwind.stg_orders",
+   "language": "sql",
+   "config": {
+    "materialized": "test",
+    "schema": "dbt_test__audit"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_customers",
+     "model.northwind.stg_orders"
+    ]
+   }
+  },
+  "test.northwind.not_null_stg_order_details_order_id.c4b83821af": {
+   "resource_type": "test",
+   "package_name": "northwind",
+   "name": "not_null_stg_order_details_order_id",
+   "alias": "not_null_stg_order_details_order_id",
+   "schema": "public_dbt_test__audit",
+   "database": "alphageek",
+   "unique_id": "test.northwind.not_null_stg_order_details_order_id.c4b83821af",
+   "original_file_path": "models/staging/_crm__models.yml",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "{{ test_not_null(**_dbt_generic_test_kwargs) }}",
+   "relation_name": null,
+   "group": null,
+   "test_metadata": {
+    "name": "not_null",
+    "kwargs": {
+     "column_name": "order_id",
+     "model": "{{ get_where_subquery(ref('stg_order_details')) }}"
+    },
+    "namespace": null
+   },
+   "column_name": "order_id",
+   "attached_node": "model.northwind.stg_order_details",
+   "language": "sql",
+   "config": {
+    "materialized": "test",
+    "schema": "dbt_test__audit"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_order_details"
+    ]
+   }
+  },
+  "test.northwind.not_null_stg_order_details_product_id.817da0fb10": {
+   "resource_type": "test",
+   "package_name": "northwind",
+   "name": "not_null_stg_order_details_product_id",
+   "alias": "not_null_stg_order_details_product_id",
+   "schema": "public_dbt_test__audit",
+   "database": "alphageek",
+   "unique_id": "test.northwind.not_null_stg_order_details_product_id.817da0fb10",
+   "original_file_path": "models/staging/_crm__models.yml",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "{{ test_not_null(**_dbt_generic_test_kwargs) }}",
+   "relation_name": null,
+   "group": null,
+   "test_metadata": {
+    "name": "not_null",
+    "kwargs": {
+     "column_name": "product_id",
+     "model": "{{ get_where_subquery(ref('stg_order_details')) }}"
+    },
+    "namespace": null
+   },
+   "column_name": "product_id",
+   "attached_node": "model.northwind.stg_order_details",
+   "language": "sql",
+   "config": {
+    "materialized": "test",
+    "schema": "dbt_test__audit"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_order_details"
+    ]
+   }
+  },
+  "test.northwind.not_null_stg_order_details_unit_price.f89e24517e": {
+   "resource_type": "test",
+   "package_name": "northwind",
+   "name": "not_null_stg_order_details_unit_price",
+   "alias": "not_null_stg_order_details_unit_price",
+   "schema": "public_dbt_test__audit",
+   "database": "alphageek",
+   "unique_id": "test.northwind.not_null_stg_order_details_unit_price.f89e24517e",
+   "original_file_path": "models/staging/_crm__models.yml",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "{{ test_not_null(**_dbt_generic_test_kwargs) }}",
+   "relation_name": null,
+   "group": null,
+   "test_metadata": {
+    "name": "not_null",
+    "kwargs": {
+     "column_name": "unit_price",
+     "model": "{{ get_where_subquery(ref('stg_order_details')) }}"
+    },
+    "namespace": null
+   },
+   "column_name": "unit_price",
+   "attached_node": "model.northwind.stg_order_details",
+   "language": "sql",
+   "config": {
+    "materialized": "test",
+    "schema": "dbt_test__audit"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_order_details"
+    ]
+   }
+  },
+  "test.northwind.not_null_stg_order_details_quantity.4cb9db84bb": {
+   "resource_type": "test",
+   "package_name": "northwind",
+   "name": "not_null_stg_order_details_quantity",
+   "alias": "not_null_stg_order_details_quantity",
+   "schema": "public_dbt_test__audit",
+   "database": "alphageek",
+   "unique_id": "test.northwind.not_null_stg_order_details_quantity.4cb9db84bb",
+   "original_file_path": "models/staging/_crm__models.yml",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "{{ test_not_null(**_dbt_generic_test_kwargs) }}",
+   "relation_name": null,
+   "group": null,
+   "test_metadata": {
+    "name": "not_null",
+    "kwargs": {
+     "column_name": "quantity",
+     "model": "{{ get_where_subquery(ref('stg_order_details')) }}"
+    },
+    "namespace": null
+   },
+   "column_name": "quantity",
+   "attached_node": "model.northwind.stg_order_details",
+   "language": "sql",
+   "config": {
+    "materialized": "test",
+    "schema": "dbt_test__audit"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_order_details"
+    ]
+   }
+  },
+  "test.northwind.not_null_stg_customers_customer_id.e2cfb1f9aa": {
+   "resource_type": "test",
+   "package_name": "northwind",
+   "name": "not_null_stg_customers_customer_id",
+   "alias": "not_null_stg_customers_customer_id",
+   "schema": "public_dbt_test__audit",
+   "database": "alphageek",
+   "unique_id": "test.northwind.not_null_stg_customers_customer_id.e2cfb1f9aa",
+   "original_file_path": "models/staging/_crm__models.yml",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "{{ test_not_null(**_dbt_generic_test_kwargs) }}",
+   "relation_name": null,
+   "group": null,
+   "test_metadata": {
+    "name": "not_null",
+    "kwargs": {
+     "column_name": "customer_id",
+     "model": "{{ get_where_subquery(ref('stg_customers')) }}"
+    },
+    "namespace": null
+   },
+   "column_name": "customer_id",
+   "attached_node": "model.northwind.stg_customers",
+   "language": "sql",
+   "config": {
+    "materialized": "test",
+    "schema": "dbt_test__audit"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_customers"
+    ]
+   }
+  },
+  "test.northwind.unique_stg_customers_customer_id.c7614daada": {
+   "resource_type": "test",
+   "package_name": "northwind",
+   "name": "unique_stg_customers_customer_id",
+   "alias": "unique_stg_customers_customer_id",
+   "schema": "public_dbt_test__audit",
+   "database": "alphageek",
+   "unique_id": "test.northwind.unique_stg_customers_customer_id.c7614daada",
+   "original_file_path": "models/staging/_crm__models.yml",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "{{ test_unique(**_dbt_generic_test_kwargs) }}",
+   "relation_name": null,
+   "group": null,
+   "test_metadata": {
+    "name": "unique",
+    "kwargs": {
+     "column_name": "customer_id",
+     "model": "{{ get_where_subquery(ref('stg_customers')) }}"
+    },
+    "namespace": null
+   },
+   "column_name": "customer_id",
+   "attached_node": "model.northwind.stg_customers",
+   "language": "sql",
+   "config": {
+    "materialized": "test",
+    "schema": "dbt_test__audit"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_customers"
+    ]
+   }
+  },
+  "test.northwind.not_null_stg_customers_company_name.2351098ab7": {
+   "resource_type": "test",
+   "package_name": "northwind",
+   "name": "not_null_stg_customers_company_name",
+   "alias": "not_null_stg_customers_company_name",
+   "schema": "public_dbt_test__audit",
+   "database": "alphageek",
+   "unique_id": "test.northwind.not_null_stg_customers_company_name.2351098ab7",
+   "original_file_path": "models/staging/_crm__models.yml",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "raw_code": "{{ test_not_null(**_dbt_generic_test_kwargs) }}",
+   "relation_name": null,
+   "group": null,
+   "test_metadata": {
+    "name": "not_null",
+    "kwargs": {
+     "column_name": "company_name",
+     "model": "{{ get_where_subquery(ref('stg_customers')) }}"
+    },
+    "namespace": null
+   },
+   "column_name": "company_name",
+   "attached_node": "model.northwind.stg_customers",
+   "language": "sql",
+   "config": {
+    "materialized": "test",
+    "schema": "dbt_test__audit"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_customers"
+    ]
+   }
+  },
+  "seed.northwind.employees": {
+   "resource_type": "seed",
+   "package_name": "northwind",
+   "name": "employees",
+   "schema": "public",
+   "database": "alphageek",
+   "unique_id": "seed.northwind.employees",
+   "original_file_path": "seeds/employees.csv",
+   "tags": [],
+   "description": "Employees",
+   "meta": {},
+   "config": {
+    "materialized": "seed"
+   },
+   "depends_on": {
+    "nodes": []
+   },
+   "columns": {
+    "employee_id": {
+     "name": "employee_id",
+     "description": "Key",
+     "meta": {},
+     "tags": [],
+     "constraints": [
+      {
+       "type": "primary_key"
+      }
+     ]
+    },
+    "last_name": {
+     "name": "last_name",
+     "description": "",
+     "meta": {},
+     "tags": [],
+     "constraints": []
+    }
+   }
+  },
+  "model.northwind.report_customers_per_region": {
+   "resource_type": "model",
+   "package_name": "northwind",
+   "name": "report_customers_per_region",
+   "schema": "public_gold",
+   "database": "alphageek",
+   "unique_id": "model.northwind.report_customers_per_region",
+   "original_file_path": "models/reports/report_customers_per_region.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "config": {
+    "materialized": "table",
+    "schema": "gold"
+   },
+   "raw_code": "{{ config(schema='gold', materialized='table') }}\nselect r.region_name, count(distinct c.customer_id) as customers\nfrom {{ source('crm', 'regions') }} as r\ninner join {{ ref('stg_customers') }} as c on c.region = r.region_id\ngroup by r.region_name",
+   "depends_on": {
+    "nodes": [
+     "source.northwind.crm.regions",
+     "model.northwind.stg_customers"
+    ]
+   }
+  },
+  "test.northwind.rw": {
+   "resource_type": "test",
+   "package_name": "northwind",
+   "name": "rw",
+   "column_name": "product_id",
+   "attached_node": "model.northwind.stg_order_details",
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_products",
+     "model.northwind.stg_order_details"
+    ]
+   },
+   "test_metadata": {
+    "name": "relationships_where",
+    "kwargs": {
+     "column_name": "product_id",
+     "to": "ref('stg_products')",
+     "field": "product_id",
+     "from_condition": "quantity > 0",
+     "model": "{{ get_where_subquery(ref('stg_order_details')) }}"
+    }
+   }
+  }
+ },
+ "sources": {
+  "source.northwind.crm.regions": {
+   "resource_type": "source",
+   "package_name": "northwind",
+   "name": "regions",
+   "source_name": "crm",
+   "identifier": "regions",
+   "schema": "public",
+   "database": "alphageek",
+   "unique_id": "source.northwind.crm.regions",
+   "original_file_path": "models/staging/_crm__models.yml",
+   "tags": [],
+   "description": "Sales regions",
+   "meta": {},
+   "columns": {
+    "region_id": {
+     "name": "region_id",
+     "description": "Key",
+     "meta": {},
+     "tags": []
+    },
+    "region_name": {
+     "name": "region_name",
+     "description": "",
+     "meta": {},
+     "tags": []
+    }
+   }
+  }
+ },
+ "groups": {},
+ "exposures": {},
+ "metrics": {
+  "metric.northwind.total_quantity": {
+   "name": "total_quantity",
+   "resource_type": "metric",
+   "unique_id": "metric.northwind.total_quantity",
+   "type": "simple",
+   "type_params": {
+    "measure": {
+     "name": "quantity_sold"
+    }
+   },
+   "label": "Total quantity",
+   "description": "All units sold.",
+   "filter": {
+    "where_filters": [
+     {
+      "where_sql_template": "{{ Dimension('order__discount') }} = 0"
+     }
+    ]
+   },
+   "tags": [
+    "finance"
+   ]
+  },
+  "metric.northwind.quantity_per_order": {
+   "name": "quantity_per_order",
+   "resource_type": "metric",
+   "unique_id": "metric.northwind.quantity_per_order",
+   "type": "ratio",
+   "type_params": {
+    "numerator": {
+     "name": "total_quantity"
+    },
+    "denominator": {
+     "name": "orders_placed"
+    }
+   },
+   "label": "Quantity per order"
+  },
+  "metric.northwind.orders_placed": {
+   "name": "orders_placed",
+   "resource_type": "metric",
+   "unique_id": "metric.northwind.orders_placed",
+   "type": "simple",
+   "type_params": {
+    "measure": {
+     "name": "order_count"
+    }
+   },
+   "label": "Orders placed"
+  },
+  "metric.northwind.double_quantity": {
+   "name": "double_quantity",
+   "resource_type": "metric",
+   "unique_id": "metric.northwind.double_quantity",
+   "type": "derived",
+   "type_params": {
+    "expr": "total_quantity * 2",
+    "metrics": [
+     {
+      "name": "total_quantity"
+     }
+    ]
+   }
+  },
+  "metric.northwind.running_quantity": {
+   "name": "running_quantity",
+   "resource_type": "metric",
+   "unique_id": "metric.northwind.running_quantity",
+   "type": "cumulative",
+   "type_params": {
+    "measure": {
+     "name": "quantity_sold"
+    }
+   },
+   "label": "Running quantity"
+  },
+  "metric.northwind.conversion": {
+   "name": "conversion",
+   "resource_type": "metric",
+   "unique_id": "metric.northwind.conversion",
+   "type": "conversion",
+   "type_params": {
+    "conversion_type_params": {}
+   }
+  },
+  "metric.northwind.legacy_orders": {
+   "name": "legacy_orders",
+   "resource_type": "metric",
+   "unique_id": "metric.northwind.legacy_orders",
+   "label": "Legacy orders",
+   "calculation_method": "count",
+   "expression": "order_id",
+   "model": "ref('stg_orders')",
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_orders"
+    ]
+   }
+  }
+ },
+ "semantic_models": {
+  "semantic_model.northwind.order_lines": {
+   "name": "order_lines",
+   "resource_type": "semantic_model",
+   "package_name": "northwind",
+   "unique_id": "semantic_model.northwind.order_lines",
+   "model": "ref('stg_order_details')",
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_order_details"
+    ]
+   },
+   "entities": [
+    {
+     "name": "order",
+     "type": "foreign",
+     "expr": "order_id"
+    },
+    {
+     "name": "product",
+     "type": "foreign",
+     "expr": "product_id"
+    }
+   ],
+   "dimensions": [
+    {
+     "name": "discount",
+     "type": "categorical"
+    }
+   ],
+   "measures": [
+    {
+     "name": "quantity_sold",
+     "agg": "sum",
+     "expr": "quantity",
+     "description": "Units sold"
+    },
+    {
+     "name": "avg_unit_price",
+     "agg": "average",
+     "expr": "unit_price"
+    },
+    {
+     "name": "list_value",
+     "agg": "sum",
+     "expr": "unit_price * quantity"
+    }
+   ]
+  },
+  "semantic_model.northwind.orders": {
+   "name": "orders",
+   "resource_type": "semantic_model",
+   "package_name": "northwind",
+   "unique_id": "semantic_model.northwind.orders",
+   "model": "ref('stg_orders')",
+   "depends_on": {
+    "nodes": [
+     "model.northwind.stg_orders"
+    ]
+   },
+   "entities": [
+    {
+     "name": "order",
+     "type": "primary",
+     "expr": "order_id"
+    }
+   ],
+   "dimensions": [
+    {
+     "name": "order_date",
+     "type": "time",
+     "type_params": {
+      "time_granularity": "day"
+     }
+    }
+   ],
+   "measures": [
+    {
+     "name": "order_count",
+     "agg": "count_distinct",
+     "expr": "order_id"
+    }
+   ]
+  }
+ },
+ "saved_queries": {}
+}

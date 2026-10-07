@@ -1,0 +1,4 @@
+business_day_convention_code,business_day_convention_name,description,is_active
+MODFOLLOWING,Modified Following,"Next business day unless it crosses the month end, then previous",true
+FOLLOWING,Following,Next business day,true
+NONE,No adjustment,Dates are not adjusted,true

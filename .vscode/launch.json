@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // The built-in extensionHost launch dials localhost -> ::1 and never attaches on this machine
+      // (inspector listens on 127.0.0.1 only), so open the dev host ourselves and attach over IPv4.
+      "name": "Run Strata",
+      "type": "node",
+      "request": "attach",
+      "address": "127.0.0.1",
+      "port": 9333,
+      "continueOnAttach": true,
+      "timeout": 30000,
+      "preLaunchTask": "strata: open dev host",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}

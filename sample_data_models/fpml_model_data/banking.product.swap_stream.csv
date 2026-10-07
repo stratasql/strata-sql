@@ -1,0 +1,3 @@
+swap_stream_id,product_id,stream_number,payer_party_id,receiver_party_id,stream_kind,currency_code,day_count_fraction_code,compounding_method
+1,1001,1,2,1,Fixed,EUR,30/360,
+2,1001,2,1,2,Floating,EUR,ACT/360,

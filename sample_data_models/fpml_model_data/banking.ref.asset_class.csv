@@ -1,0 +1,4 @@
+asset_class_code,asset_class_name,description,is_active
+InterestRate,Interest Rate,,true
+ForeignExchange,Foreign Exchange,,true
+Credit,Credit,,true

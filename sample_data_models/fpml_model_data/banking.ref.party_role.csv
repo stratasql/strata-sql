@@ -1,0 +1,4 @@
+party_role_code,party_role_name,description,is_active
+Counterparty,Counterparty,A party facing the bank on the trade,true
+ReportingParty,Reporting Party,Party responsible for regulatory reporting,true
+ClearingOrganization,Clearing Organization,CCP clearing the trade,true

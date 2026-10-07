@@ -1,0 +1,4 @@
+trade_status_code,trade_status_name,description,is_active
+Pending,Pending,,true
+Active,Active,,true
+Terminated,Terminated,,true

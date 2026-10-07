@@ -1,0 +1,12 @@
+# the build context of docker/Dockerfile.source is the repository: send only what scripts/build-cli.js reads (nothing from node_modules, .git, dist or the tests)
+*
+!package.json
+!package-lock.json
+!cli.js
+!lib
+!media
+!help.md
+!LICENSE
+!sample_data_models
+!scripts/build-cli.js
+!scripts/cli-README.md

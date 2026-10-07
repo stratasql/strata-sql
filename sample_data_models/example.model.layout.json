@@ -1,0 +1,23 @@
+{
+  "strata": "layout/1",
+  "positions": {
+    "conceptual": {"Country": [0, 0], "Customer": [370, 0], "Order": [370, 158], "Product": [0, 158]},
+    "logical": {"Country": [0, 282], "Customer": [0, 0], "Order": [390, 0], "Order Line": [760, 0], "Product": [390, 282]},
+    "physical": {
+      "main.ref.country": [0, 0],
+      "main.sales.customer": [0, 353],
+      "main.sales.customer_orders_mv": [0, 525],
+      "main.sales.customer_product": [740, 258],
+      "main.sales.order_item": [740, 406],
+      "main.sales.orders": [370, 486],
+      "main.sales.product": [370, 338]
+    },
+    "semantic": {
+      "Active Customers": [0, 332],
+      "Average Order Value": [370, 692],
+      "main.sales.orders": [0, 0],
+      "Order Count": [0, 704],
+      "Sales Amount": [0, 828]
+    }
+  }
+}

@@ -1,0 +1,4 @@
+employee_id,last_name,first_name,title,title_of_courtesy,birth_date,hire_date,address_id,home_phone,extension,reports_to
+1,Davolio,Nancy,Sales Representative,Ms.,1948-12-08,1992-05-01,3,(206) 555-9857,5467,2
+2,Fuller,Andrew,"Vice President, Sales",Dr.,1952-02-19,1992-08-14,5,(206) 555-9482,3457,
+5,Buchanan,Steven,Sales Manager,Mr.,1955-03-04,1993-10-17,6,(71) 555-4848,3453,2

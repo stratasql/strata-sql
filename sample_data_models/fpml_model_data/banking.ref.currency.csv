@@ -1,0 +1,4 @@
+currency_code,currency_name,numeric_code,minor_units,description,is_active
+USD,US Dollar,840,2,,true
+EUR,Euro,978,2,,true
+GBP,Pound Sterling,826,2,,true

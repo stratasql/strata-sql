@@ -1,0 +1,14 @@
+{
+  "strata": "layout/1",
+  "positions": {
+    "conceptual": {"Customer": [0, 0], "Date": [0, 128], "Product": [0, 256], "Sales": [370, 0], "Store": [0, 384]},
+    "logical": {"Customer": [780, 0], "Date": [390, 0], "Product": [0, 450], "Sales": [0, 0], "Store": [390, 450]},
+    "physical": {
+      "dw.dim_customer": [0, 48],
+      "dw.dim_date": [0, 292],
+      "dw.dim_product": [0, 584],
+      "dw.dim_store": [370, 60],
+      "dw.fact_sales": [740, 0]
+    }
+  }
+}

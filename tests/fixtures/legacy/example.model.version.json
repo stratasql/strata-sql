@@ -1,0 +1,512 @@
+{
+  "strata": "history/1",
+  "entries": [
+    {
+      "id": "m1",
+      "seq": 1,
+      "stream": "modelling",
+      "ts": "2026-09-20T19:51:01.357Z",
+      "user": "Ada Lovelace",
+      "email": "ada@corp.io",
+      "system": "example",
+      "message": "Initial model",
+      "hash": "6ee6ee9d2887f",
+      "kind": "snapshot",
+      "snapshot": {
+        "project": {
+          "name": "Sales Warehouse",
+          "description": "Order-to-cash warehouse",
+          "technology": "Databricks",
+          "methodology": "ER - 3NF",
+          "naming": "catalog.schema.table",
+          "stakeholders": [{"name": "Ada Lovelace", "role": "Data Architect", "email": "ada@corp.io"}]
+        },
+        "catalog:main": {"name": "main"},
+        "schema:main.ref": {"name": "ref", "catalog": "main"},
+        "schema:main.sales": {"name": "sales", "catalog": "main"},
+        "table:main.ref.country": {
+          "name": "country",
+          "schema": "main.ref",
+          "displayName": "Country",
+          "description": "ISO country reference list.",
+          "columns": ["id", "iso"]
+        },
+        "column:main.ref.country.id": {"name": "id", "type": "INT", "pk": true},
+        "column:main.ref.country.iso": {"name": "iso", "type": "STRING", "unique": true},
+        "table:main.sales.customer": {
+          "name": "customer",
+          "schema": "main.sales",
+          "displayName": "Customer",
+          "description": "A person or company that buys from us.",
+          "columns": ["id", "name", "country_id"]
+        },
+        "column:main.sales.customer.id": {"name": "id", "type": "BIGINT", "pk": true},
+        "column:main.sales.customer.name": {"name": "name", "displayName": "Customer Name", "type": "STRING", "notNull": true},
+        "column:main.sales.customer.country_id": {"name": "country_id", "type": "INT"},
+        "table:main.sales.customer_orders_mv": {
+          "name": "customer_orders_mv",
+          "kind": "view",
+          "viewType": "materialized",
+          "schema": "main.sales",
+          "displayName": "Customer Orders (MV)",
+          "description": "Order totals per customer, refreshed nightly.",
+          "definition": "SELECT customer_id, COUNT(*) AS order_count, SUM(total) AS total_spent\nFROM main.sales.orders\nGROUP BY customer_id",
+          "columns": ["customer_id", "order_count", "total_spent"]
+        },
+        "column:main.sales.customer_orders_mv.customer_id": {"name": "customer_id", "type": "BIGINT"},
+        "column:main.sales.customer_orders_mv.order_count": {"name": "order_count", "type": "BIGINT"},
+        "column:main.sales.customer_orders_mv.total_spent": {"name": "total_spent", "type": "DECIMAL(18,2)"},
+        "table:main.sales.customer_product": {
+          "name": "customer_product",
+          "schema": "main.sales",
+          "displayName": "Customer Product",
+          "description": "Bridge table for customers and the products they buy.",
+          "columns": ["customer_id", "product_id"]
+        },
+        "column:main.sales.customer_product.customer_id": {"name": "customer_id", "type": "BIGINT", "pk": true},
+        "column:main.sales.customer_product.product_id": {"name": "product_id", "type": "BIGINT", "pk": true},
+        "table:main.sales.order_item": {
+          "name": "order_item",
+          "schema": "main.sales",
+          "displayName": "Order Line",
+          "description": "One product line on an order.",
+          "columns": ["id", "order_id", "product_id"]
+        },
+        "column:main.sales.order_item.id": {"name": "id", "type": "BIGINT", "pk": true},
+        "column:main.sales.order_item.order_id": {"name": "order_id", "type": "BIGINT"},
+        "column:main.sales.order_item.product_id": {"name": "product_id", "type": "BIGINT"},
+        "table:main.sales.orders": {
+          "name": "orders",
+          "schema": "main.sales",
+          "displayName": "Sales Order",
+          "description": "A purchase placed by a customer.",
+          "columns": ["id", "customer_id", "total"]
+        },
+        "column:main.sales.orders.id": {"name": "id", "type": "BIGINT", "pk": true},
+        "column:main.sales.orders.customer_id": {"name": "customer_id", "type": "BIGINT", "notNull": true},
+        "column:main.sales.orders.total": {"name": "total", "type": "DECIMAL(18,2)", "default": "0"},
+        "table:main.sales.product": {
+          "name": "product",
+          "schema": "main.sales",
+          "displayName": "Product",
+          "description": "Something we sell.",
+          "columns": ["id", "sku"]
+        },
+        "column:main.sales.product.id": {"name": "id", "type": "BIGINT", "pk": true},
+        "column:main.sales.product.sku": {"name": "sku", "type": "STRING", "unique": true},
+        "rel:main.ref.country.id>main.sales.customer.country_id": {"parent": "main.ref.country.id", "child": "main.sales.customer.country_id", "cardinality": "1..M"},
+        "rel:main.sales.customer.id>main.sales.customer_product.customer_id": {"parent": "main.sales.customer.id", "child": "main.sales.customer_product.customer_id", "cardinality": "1..M"},
+        "rel:main.sales.customer.id>main.sales.orders.customer_id": {
+          "parent": "main.sales.customer.id",
+          "child": "main.sales.orders.customer_id",
+          "cardinality": "1..M",
+          "name": "places",
+          "description": "A customer places many orders; an order belongs to exactly one customer."
+        },
+        "rel:main.sales.customer>main.sales.product": {
+          "parent": "main.sales.customer",
+          "child": "main.sales.product",
+          "cardinality": "M..M",
+          "name": "buys",
+          "description": "Customers buy many products and products are bought by many customers.",
+          "via": "main.sales.customer_product"
+        },
+        "rel:main.sales.orders.id>main.sales.order_item.order_id": {"parent": "main.sales.orders.id", "child": "main.sales.order_item.order_id", "cardinality": "1..M"},
+        "rel:main.sales.product.id>main.sales.customer_product.product_id": {"parent": "main.sales.product.id", "child": "main.sales.customer_product.product_id", "cardinality": "1..M"},
+        "rel:main.sales.product.id>main.sales.order_item.product_id": {"parent": "main.sales.product.id", "child": "main.sales.order_item.product_id", "cardinality": "1..M"}
+      }
+    },
+    {
+      "id": "g1",
+      "seq": 2,
+      "stream": "governance",
+      "ts": "2026-09-20T19:51:01.358Z",
+      "user": "Ada Lovelace",
+      "email": "ada@corp.io",
+      "system": "example",
+      "message": "Initial governance",
+      "hash": "19dd755ecc06bd",
+      "kind": "snapshot",
+      "snapshot": {
+        "assign:table:main.sales.customer": {"properties": {"business_owner": "Sales Ops", "organization_unit": "Commercial"}},
+        "assign:column:main.sales.customer.name": {"tags": ["pii"]},
+        "tag:pii": {
+          "name": "pii",
+          "displayName": "Personal Data",
+          "description": "Identifies a natural person",
+          "owner": "privacy@corp.io",
+          "domain": "Customer",
+          "enabled": true
+        },
+        "propertyKeys": ["business_owner", "organization_unit", "data_steward"]
+      }
+    },
+    {
+      "id": "m2",
+      "seq": 3,
+      "stream": "modelling",
+      "ts": "2026-09-21T13:51:17.468Z",
+      "user": "Data Architect",
+      "email": "data.architect@example.com",
+      "system": "generator",
+      "message": "Add data availability SLAs",
+      "hash": "1b9f64e07e9515",
+      "kind": "delta",
+      "patch": {
+        "set": {
+          "table:main.ref.country": {
+            "name": "country",
+            "schema": "main.ref",
+            "displayName": "Country",
+            "description": "ISO country reference list.",
+            "sla": {"exclude": true},
+            "columns": ["id", "iso"]
+          },
+          "table:main.sales.customer": {
+            "name": "customer",
+            "schema": "main.sales",
+            "displayName": "Customer",
+            "description": "A person or company that buys from us.",
+            "sla": {"frequency": "daily", "time": "06:00"},
+            "columns": ["id", "name", "country_id"]
+          },
+          "table:main.sales.customer_orders_mv": {
+            "name": "customer_orders_mv",
+            "kind": "view",
+            "viewType": "materialized",
+            "schema": "main.sales",
+            "displayName": "Customer Orders (MV)",
+            "description": "Order totals per customer, refreshed nightly.",
+            "sla": {"frequency": "daily", "time": "08:00"},
+            "definition": "SELECT customer_id, COUNT(*) AS order_count, SUM(total) AS total_spent\nFROM main.sales.orders\nGROUP BY customer_id",
+            "columns": ["customer_id", "order_count", "total_spent"]
+          },
+          "table:main.sales.customer_product": {
+            "name": "customer_product",
+            "schema": "main.sales",
+            "displayName": "Customer Product",
+            "description": "Bridge table for customers and the products they buy.",
+            "sla": {"frequency": "weekly", "time": "08:00"},
+            "columns": ["customer_id", "product_id"]
+          },
+          "table:main.sales.order_item": {
+            "name": "order_item",
+            "schema": "main.sales",
+            "displayName": "Order Line",
+            "description": "One product line on an order.",
+            "sla": {"frequency": "daily", "time": "07:30"},
+            "columns": ["id", "order_id", "product_id"]
+          },
+          "table:main.sales.orders": {
+            "name": "orders",
+            "schema": "main.sales",
+            "displayName": "Sales Order",
+            "description": "A purchase placed by a customer.",
+            "sla": {"frequency": "daily", "time": "07:00"},
+            "columns": ["id", "customer_id", "total"]
+          },
+          "table:main.sales.product": {
+            "name": "product",
+            "schema": "main.sales",
+            "displayName": "Product",
+            "description": "Something we sell.",
+            "sla": {"frequency": "daily", "time": "05:00"},
+            "columns": ["id", "sku"]
+          }
+        },
+        "del": []
+      }
+    },
+    {
+      "id": "m3",
+      "seq": 4,
+      "stream": "modelling",
+      "ts": "2026-09-24T21:19:21.392Z",
+      "user": "Ada Lovelace",
+      "email": "ada@corp.io",
+      "system": "build-samples",
+      "message": "Add the conceptual and logical levels: 4 concepts, 5 entities (Order and Order Line realise the Order concept), their relationships",
+      "hash": "a21d42da68990",
+      "kind": "delta",
+      "patch": {
+        "set": {
+          "table:main.ref.country": {
+            "name": "country",
+            "schema": "main.ref",
+            "entity": "Country",
+            "displayName": "Country",
+            "description": "ISO country reference list.",
+            "sla": {"exclude": true},
+            "columns": ["id", "iso"]
+          },
+          "table:main.sales.customer": {
+            "name": "customer",
+            "schema": "main.sales",
+            "entity": "Customer",
+            "displayName": "Customer",
+            "description": "A person or company that buys from us.",
+            "sla": {"frequency": "daily", "time": "06:00"},
+            "columns": ["id", "name", "country_id"]
+          },
+          "table:main.sales.order_item": {
+            "name": "order_item",
+            "schema": "main.sales",
+            "entity": "Order Line",
+            "displayName": "Order Line",
+            "description": "One product line on an order.",
+            "sla": {"frequency": "daily", "time": "07:30"},
+            "columns": ["id", "order_id", "product_id"]
+          },
+          "table:main.sales.orders": {
+            "name": "orders",
+            "schema": "main.sales",
+            "entity": "Order",
+            "displayName": "Sales Order",
+            "description": "A purchase placed by a customer.",
+            "sla": {"frequency": "daily", "time": "07:00"},
+            "columns": ["id", "customer_id", "total"]
+          },
+          "table:main.sales.product": {
+            "name": "product",
+            "schema": "main.sales",
+            "entity": "Product",
+            "displayName": "Product",
+            "description": "Something we sell.",
+            "sla": {"frequency": "daily", "time": "05:00"},
+            "columns": ["id", "sku"]
+          },
+          "concept:Country": {"name": "Country", "description": "Where a customer is based."},
+          "concept:Customer": {"name": "Customer", "description": "A person or company that buys from us."},
+          "concept:Order": {"name": "Order", "description": "A purchase placed by a customer, with its lines."},
+          "concept:Product": {"name": "Product", "description": "Something we sell."},
+          "crel:Country>Customer": {"parent": "Country", "child": "Customer", "cardinality": "1..M", "name": "is home of"},
+          "crel:Customer>Order": {
+            "parent": "Customer",
+            "child": "Order",
+            "cardinality": "1..M",
+            "name": "places",
+            "description": "A customer places many orders; an order belongs to exactly one customer."
+          },
+          "crel:Customer>Product": {
+            "parent": "Customer",
+            "child": "Product",
+            "cardinality": "M..M",
+            "name": "buys",
+            "description": "Customers buy many products and products are bought by many customers."
+          },
+          "crel:Product>Order": {"parent": "Product", "child": "Order", "cardinality": "1..M", "name": "appears on"},
+          "entity:Country": {"name": "Country", "concept": "Country", "description": "ISO country reference list."},
+          "entity:Customer": {"name": "Customer", "concept": "Customer", "description": "A person or company that buys from us."},
+          "entity:Order": {"name": "Order", "concept": "Order", "description": "A purchase placed by a customer."},
+          "entity:Order Line": {"name": "Order Line", "concept": "Order", "description": "One product line on an order."},
+          "entity:Product": {"name": "Product", "concept": "Product", "description": "Something we sell."},
+          "lrel:Country>Customer": {"parent": "Country", "child": "Customer", "cardinality": "1..M"},
+          "lrel:Customer>Order": {
+            "parent": "Customer",
+            "child": "Order",
+            "cardinality": "1..M",
+            "name": "places",
+            "description": "A customer places many orders; an order belongs to exactly one customer."
+          },
+          "lrel:Customer>Product": {
+            "parent": "Customer",
+            "child": "Product",
+            "cardinality": "M..M",
+            "name": "buys",
+            "description": "Customers buy many products and products are bought by many customers."
+          },
+          "lrel:Order>Order Line": {"parent": "Order", "child": "Order Line", "cardinality": "1..M"},
+          "lrel:Product>Order Line": {"parent": "Product", "child": "Order Line", "cardinality": "1..M"}
+        },
+        "del": []
+      }
+    },
+    {
+      "id": "g2",
+      "seq": 5,
+      "stream": "governance",
+      "ts": "2026-09-24T21:19:21.393Z",
+      "user": "Ada Lovelace",
+      "email": "ada@corp.io",
+      "system": "build-samples",
+      "message": "Policies (Data Protection, GDPR, Mask Personal Data, Retention 7 Years, Financial Records, Customer Data) and the tags that bring them",
+      "hash": "53d487ae3eb25",
+      "kind": "delta",
+      "patch": {
+        "set": {
+          "tag:certified": {
+            "name": "certified",
+            "displayName": "Certified",
+            "description": "Checked and approved for reporting.",
+            "owner": "Finance",
+            "domain": "Reporting",
+            "enabled": true
+          },
+          "tag:pii": {
+            "name": "pii",
+            "displayName": "Personal Data",
+            "description": "Identifies a natural person",
+            "owner": "privacy@corp.io",
+            "domain": "Customer",
+            "policies": ["GDPR"],
+            "enabled": true
+          },
+          "policy:Customer Data": {
+            "name": "Customer Data",
+            "parents": ["GDPR", "Retention 7 Years"],
+            "type": "business",
+            "owner": "Head of Sales",
+            "description": "How customer records are collected, used and kept: the personal data rules plus the retention of order history."
+          },
+          "policy:Data Protection": {
+            "name": "Data Protection",
+            "type": "security",
+            "owner": "Security Office",
+            "description": "Personal and confidential data: least-privilege access, and reads are logged."
+          },
+          "policy:Financial Records": {
+            "name": "Financial Records",
+            "parents": ["Retention 7 Years"],
+            "type": "regulatory",
+            "classification": "Confidential",
+            "owner": "Finance",
+            "description": "Amounts used in financial statements: changes are controlled and reconciled monthly."
+          },
+          "policy:GDPR": {
+            "name": "GDPR",
+            "parents": ["Data Protection"],
+            "type": "privacy",
+            "jurisdiction": "EU",
+            "classification": "Restricted",
+            "owner": "Privacy Officer",
+            "description": "EU General Data Protection Regulation: a lawful basis for processing, data-subject rights, breach notification within 72 hours."
+          },
+          "policy:Mask Personal Data": {
+            "name": "Mask Personal Data",
+            "parents": ["GDPR"],
+            "type": "protection",
+            "owner": "Data Platform",
+            "description": "Personal data is masked for everyone outside customer service."
+          },
+          "policy:Retention 7 Years": {
+            "name": "Retention 7 Years",
+            "type": "retention",
+            "owner": "Finance",
+            "description": "Kept for 7 years after the order date, then deleted."
+          }
+        },
+        "del": []
+      }
+    },
+    {
+      "id": "g3",
+      "seq": 6,
+      "stream": "governance",
+      "ts": "2026-09-24T21:19:21.394Z",
+      "user": "Ada Lovelace",
+      "email": "ada@corp.io",
+      "system": "build-samples",
+      "message": "Governance per level: owners, stewards, classification, criticality and lifecycle; policies on the project, a concept, a schema and a table; masking switched off on the totals view (accepted); owner / steward properties replaced",
+      "hash": "f211dc99b78e9",
+      "kind": "delta",
+      "patch": {
+        "set": {
+          "assign:project": {
+            "governance": {
+              "policies": ["Data Protection"],
+              "conceptual": {"owner": "Chief Data Officer"},
+              "logical": {"owner": "Data Architecture"},
+              "physical": {"owner": "Data Platform", "steward": "Data Engineering"},
+              "semantic": {"owner": "Finance"}
+            }
+          },
+          "assign:catalog:main": {"governance": {"classification": "Internal"}},
+          "assign:schema:main.ref": {"governance": {"classification": "Public"}},
+          "assign:schema:main.sales": {"governance": {"owner": "Sales Ops", "steward": "Sales Data Steward", "policies": ["Mask Personal Data"]}},
+          "assign:table:main.sales.customer_orders_mv": {"governance": {"off": ["Mask Personal Data"]}},
+          "assign:table:main.sales.customer_product": {"governance": {"lifecycle": "Proposed"}},
+          "assign:table:main.sales.orders": {"governance": {"criticality": "Critical", "policies": ["Financial Records"]}},
+          "assign:column:main.sales.orders.total": {"governance": {"classification": "Confidential"}},
+          "assign:concept:Customer": {
+            "governance": {
+              "owner": "Head of Sales",
+              "steward": "Customer Data Steward",
+              "classification": "Confidential",
+              "criticality": "High",
+              "lifecycle": "Active",
+              "policies": ["Customer Data"]
+            }
+          },
+          "assign:concept:Order": {"governance": {"owner": "Head of Sales", "criticality": "Critical", "lifecycle": "Active"}},
+          "assign:entity:Order": {"governance": {"owner": "Sales Data Architect", "criticality": "Critical"}},
+          "acknowledged": ["gov-off:main.sales.customer_orders_mv:Mask Personal Data"],
+          "propertyKeys": ["organization_unit"]
+        },
+        "del": []
+      }
+    },
+    {
+      "id": "s1",
+      "seq": 7,
+      "stream": "semantic",
+      "ts": "2026-09-24T21:19:21.395Z",
+      "user": "Ada Lovelace",
+      "email": "ada@corp.io",
+      "system": "build-samples",
+      "message": "Add the semantic level: Sales Amount, Order Count, Average Order Value and Active Customers",
+      "hash": "27034aaa8b87",
+      "kind": "snapshot",
+      "snapshot": {
+        "metric:Active Customers": {
+          "name": "Active Customers",
+          "description": "Customers who placed at least one order.",
+          "calculation": "orders.customer_id",
+          "aggregation": "count_distinct",
+          "grain": ["Customer"]
+        },
+        "metric:Average Order Value": {
+          "name": "Average Order Value",
+          "description": "What a customer spends on one order on average.",
+          "calculation": "{Sales Amount} / {Order Count}",
+          "aggregation": "none",
+          "grain": ["Order"]
+        },
+        "metric:Order Count": {
+          "name": "Order Count",
+          "description": "Number of orders placed.",
+          "calculation": "orders.id",
+          "aggregation": "count_distinct",
+          "grain": ["Order"]
+        },
+        "metric:Sales Amount": {
+          "name": "Sales Amount",
+          "description": "Value of the orders placed (order totals).",
+          "calculation": "orders.total",
+          "aggregation": "sum",
+          "grain": ["Order"]
+        }
+      }
+    },
+    {
+      "id": "g4",
+      "seq": 8,
+      "stream": "governance",
+      "ts": "2026-09-24T21:19:21.396Z",
+      "user": "Ada Lovelace",
+      "email": "ada@corp.io",
+      "system": "build-samples",
+      "message": "Metric owners and classification; Sales Amount, Order Count and Average Order Value tagged Certified",
+      "hash": "e08eb52bf3fa6",
+      "kind": "delta",
+      "patch": {
+        "set": {
+          "assign:metric:Active Customers": {"governance": {"owner": "Sales Ops", "lifecycle": "Proposed"}},
+          "assign:metric:Average Order Value": {"tags": ["certified"]},
+          "assign:metric:Order Count": {"tags": ["certified"], "governance": {"owner": "Sales Ops"}},
+          "assign:metric:Sales Amount": {"tags": ["certified"], "governance": {"classification": "Confidential"}}
+        },
+        "del": []
+      }
+    }
+  ]
+}

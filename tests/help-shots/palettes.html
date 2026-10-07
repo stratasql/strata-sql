@@ -1,0 +1,28 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Strata palettes</title>
+<style>
+body { margin: 0; padding: 16px 20px; background: #1b1b1f; color: #ddd; font: 13px -apple-system, "Segoe UI", sans-serif; }
+h2 { margin: 14px 0 8px; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; opacity: .85; }
+.row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.p { border-radius: 8px; overflow: hidden; border: 1px solid rgba(127,127,127,.4); }
+.p .top { padding: 8px 10px 6px; display: flex; justify-content: space-between; align-items: baseline; }
+.p .top b { font-size: 13px; } .p .top small { opacity: .7; font-size: 10px; text-transform: uppercase; }
+.p .sw { display: flex; height: 16px; } .p .sw i { flex: 1; }
+.p .mid { display: flex; height: 28px; align-items: center; gap: 6px; padding: 0 10px; font-size: 11px; }
+.p .mid span { padding: 1px 8px; border-radius: 8px; font-weight: 600; }
+</style></head><body>
+<script src="/media/themes.js"></script>
+<script>
+const T = StrataThemes;
+for (const [key, f] of Object.entries(T.FAMILIES)) {
+  const list = Object.entries(f.variants).filter(([, v]) => v.spec);
+  if (!list.length) continue;
+  document.body.insertAdjacentHTML('beforeend', `<h2>${f.label}</h2><div class="row" id="r-${key}"></div>`);
+  for (const [k, v] of list) {
+    const s = v.spec;
+    document.getElementById('r-' + key).insertAdjacentHTML('beforeend', `<div class="p" style="background:${s.bg};color:${s.fg};border-color:${s.border}">
+      <div class="top" style="background:${s.side}"><b>${v.label}</b><small>${v.kind}</small></div>
+      <div class="mid"><span style="background:${s.accent};color:${s.on}">accent</span><span style="background:${s.input};color:${s.fg}">input</span><span style="color:${s.dim}">secondary text</span></div>
+      <div class="sw">${['red', 'orange', 'yellow', 'green', 'blue', 'purple'].map((c) => `<i style="background:${s[c]}"></i>`).join('')}</div></div>`);
+  }
+}
+</script></body></html>

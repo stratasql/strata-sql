@@ -1,0 +1,3 @@
+party_id,party_name,legal_name,party_type_code,country_code,is_internal,created_at,updated_at
+1,Example Bank plc,Example Bank public limited company,Bank,GB,true,2026-01-15 09:30:00,
+2,Acme Manufacturing,Acme Manufacturing GmbH,Corporate,DE,false,2026-01-15 09:30:00,

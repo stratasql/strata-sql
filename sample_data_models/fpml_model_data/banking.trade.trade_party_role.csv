@@ -1,0 +1,3 @@
+trade_id,party_id,party_role_code,account_id
+5001,1,ReportingParty,
+5001,2,Counterparty,

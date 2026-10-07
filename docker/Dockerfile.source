@@ -1,0 +1,29 @@
+# Strata SQL in Docker, built from this repository's source instead of pulling the package from npm (docker/Dockerfile does that).
+# For unreleased changes, offline or air-gapped builds, and CI: stage 1 runs the same scripts/build-cli.js that stages the npm package and packs it,
+# stage 2 installs that tarball into the same runtime as docker/Dockerfile, so the image holds exactly what `npm publish` would send.
+#   docker build -f docker/Dockerfile.source -t strata-sql .                 # from the repository root (the context is the repository, see .dockerignore)
+#   docker run --rm -p 127.0.0.1:8787:8787 -e STRATA_DEMO=1 -e STRATA_TOKEN=strata-sql-demo-link strata-sql      # the demo; run and mount as in docker/Dockerfile
+# The SQL parser is downloaded during the build (npm, at the version package-lock.json pins); everything else comes from the working tree.
+FROM node:22-alpine AS build
+WORKDIR /src
+COPY . .
+RUN node scripts/build-cli.js && mkdir /out && npm pack ./dist/cli --pack-destination /out --silent
+
+FROM node:22-alpine
+ARG VERSION=dev
+LABEL org.opencontainers.image.title="Strata SQL" \
+      org.opencontainers.image.description="Model, govern and version your data: the Strata SQL editor in your browser" \
+      org.opencontainers.image.url="https://stratasql.com" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.version="${VERSION}"
+# the tarball of stage 1 is mounted for this one step, so it is not kept in a layer
+RUN --mount=type=bind,from=build,source=/out,target=/pkg npm install -g --omit=dev --no-audit --no-fund /pkg/*.tgz && npm cache clean --force
+WORKDIR /data
+VOLUME /data
+# not root: on Linux, run with --user "$(id -u):$(id -g)" if the mounted folder belongs to someone else
+USER node
+EXPOSE 8787
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s CMD wget -q -O /dev/null http://127.0.0.1:8787/media/brand.js || exit 1
+ENTRYPOINT ["strata-sql"]
+# listens on all interfaces INSIDE the container; publish the port to localhost only (-p 127.0.0.1:8787:8787). STRATA_TOKEN keeps the link stable.
+CMD ["live", "--host", "0.0.0.0", "--port", "8787", "--no-open"]

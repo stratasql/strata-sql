@@ -1,0 +1,3 @@
+roll_convention_code,roll_convention_name,description,is_active
+EOM,End of month,Roll to the last day of the month,true
+NONE,None,No roll convention,true

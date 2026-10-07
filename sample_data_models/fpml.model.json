@@ -1,0 +1,4199 @@
+{
+  "strata": 2,
+  "project": {
+    "name": "FpML OTC Derivatives",
+    "description": "A bank's OTC derivatives trade store modelled on the ISDA FpML (Financial products Markup Language) structures: parties, trade header, products (interest rate swaps, FX, credit default swaps, swaptions) with their schedules, lifecycle events, valuations and FpML messages. 3NF for Databricks Unity Catalog. Property fpml_element on tables points to the FpML element each table represents; the mapping is indicative and should be checked against the FpML version in use.",
+    "technology": "Databricks",
+    "methodology": "ER - 3NF",
+    "naming": "catalog.schema.table",
+    "stakeholders": [
+      {"name": "Head of Derivatives Data", "role": "Owner", "email": "derivatives.data@bank.example"},
+      {"name": "Data Architect", "role": "Data Architect", "email": "data.architect@bank.example"},
+      {"name": "Regulatory Reporting Lead", "role": "Reviewer", "email": "reg.reporting@bank.example"},
+      {"name": "Data Protection Officer", "role": "Reviewer", "email": "dpo@bank.example"}
+    ],
+    "tags": ["trade_data"],
+    "properties": {"source_system": "FpML 5.x documents (ISDA), normalised", "fpml_element": "DataDocument"},
+    "governance": {
+      "conceptual": {"owner": "Front Office", "steward": "Middle Office", "lifecycle": "Active"},
+      "logical": {"owner": "Middle Office", "steward": "Data Platform"},
+      "physical": {"owner": "Data Platform", "steward": "Data Platform"},
+      "semantic": {"owner": "Risk", "steward": "Middle Office"}
+    }
+  },
+  "governance": {
+    "tags": [
+      {
+        "name": "certified",
+        "displayName": "Certified",
+        "description": "Checked and approved for regulatory and management reporting.",
+        "owner": "Risk",
+        "domain": "Reporting",
+        "enabled": true
+      },
+      {
+        "name": "confidential",
+        "displayName": "Confidential",
+        "description": "Internal use only; not for external sharing.",
+        "owner": "security@bank.example",
+        "domain": "Security",
+        "policies": ["Data Protection"],
+        "enabled": true
+      },
+      {
+        "name": "deprecated",
+        "displayName": "Deprecated",
+        "description": "Scheduled for removal. Do not attach to new objects.",
+        "owner": "data.architect@bank.example",
+        "domain": "Data Governance",
+        "enabled": false
+      },
+      {
+        "name": "kyc",
+        "displayName": "KYC / Counterparty Identification",
+        "description": "Identifiers used to identify and verify counterparties (LEI, BIC).",
+        "owner": "kyc@bank.example",
+        "domain": "Compliance",
+        "enabled": true
+      },
+      {
+        "name": "market_data",
+        "displayName": "Market Data",
+        "description": "Fixings, curves and calendars, possibly licensed from vendors.",
+        "owner": "marketdata@bank.example",
+        "domain": "Markets",
+        "enabled": true
+      },
+      {
+        "name": "master_data",
+        "displayName": "Master Data",
+        "description": "Golden-source entities: parties, accounts, books, agreements.",
+        "owner": "mdm@bank.example",
+        "domain": "Master Data Management",
+        "enabled": true
+      },
+      {
+        "name": "pii",
+        "displayName": "Personal Data",
+        "description": "Identifies or can identify a natural person (GDPR personal data).",
+        "owner": "dpo@bank.example",
+        "domain": "Privacy",
+        "policies": ["GDPR"],
+        "enabled": true
+      },
+      {
+        "name": "reference_data",
+        "displayName": "Reference Data",
+        "description": "Slowly changing code lists shared across domains.",
+        "owner": "refdata@bank.example",
+        "domain": "Master Data Management",
+        "enabled": true
+      },
+      {
+        "name": "regulatory_reporting",
+        "displayName": "Regulatory Reporting",
+        "description": "Reportable under EMIR, Dodd-Frank or MiFIR; identifiers and terms must stay reconcilable.",
+        "owner": "reg.reporting@bank.example",
+        "domain": "Compliance",
+        "policies": ["EMIR", "Dodd-Frank", "MiFID II"],
+        "enabled": true
+      },
+      {
+        "name": "sensitive_financial",
+        "displayName": "Sensitive Financial Terms",
+        "description": "Notionals, rates, spreads, premiums and values that reveal positions or pricing.",
+        "owner": "derivatives.data@bank.example",
+        "domain": "Markets",
+        "enabled": true
+      },
+      {
+        "name": "trade_data",
+        "displayName": "Trade Data",
+        "description": "Deal terms and lifecycle captured for trades.",
+        "owner": "trading.ops@bank.example",
+        "domain": "Trading",
+        "enabled": true
+      },
+      {
+        "name": "valuation",
+        "displayName": "Valuation",
+        "description": "Model outputs (NPV, sensitivities) used for P&L, risk and collateral.",
+        "owner": "valuation.control@bank.example",
+        "domain": "Finance and Risk",
+        "enabled": true
+      }
+    ],
+    "propertyKeys": ["fpml_element", "organization_unit", "source_system"],
+    "policies": [
+      {
+        "name": "Data Protection",
+        "type": "security",
+        "owner": "Information Security",
+        "description": "Confidential client and trade data: least-privilege access, and reads are logged."
+      },
+      {
+        "name": "Dodd-Frank",
+        "parents": ["Regulatory Reporting", "Record Retention"],
+        "type": "regulatory",
+        "jurisdiction": "US",
+        "owner": "Regulatory Reporting",
+        "description": "Dodd-Frank Act Title VII (CFTC Parts 43 and 45): swap data goes to a swap data repository, with real-time public reporting; records are kept for the life of the swap plus five years."
+      },
+      {
+        "name": "EMIR",
+        "parents": ["Regulatory Reporting", "Record Retention"],
+        "type": "regulatory",
+        "jurisdiction": "EU",
+        "owner": "Regulatory Reporting",
+        "description": "European Market Infrastructure Regulation: every derivative is reported to a trade repository by the next working day; records are kept at least five years after the contract ends."
+      },
+      {
+        "name": "GDPR",
+        "parents": ["Data Protection"],
+        "type": "privacy",
+        "jurisdiction": "EU",
+        "classification": "Restricted",
+        "owner": "Data Protection Officer",
+        "description": "EU General Data Protection Regulation for data about people (traders, client contacts): a lawful basis, data-subject rights, breach notification within 72 hours."
+      },
+      {
+        "name": "Market Abuse (MAR)",
+        "parents": ["Record Retention"],
+        "type": "regulatory",
+        "jurisdiction": "EU",
+        "owner": "Compliance",
+        "description": "Market Abuse Regulation: trading is monitored for insider dealing and market manipulation, and suspicious transactions are reported (STOR)."
+      },
+      {
+        "name": "Mask Personal Data",
+        "parents": ["GDPR"],
+        "type": "protection",
+        "owner": "Data Platform",
+        "description": "Names, e-mail addresses and phone numbers are masked for everyone outside client onboarding."
+      },
+      {
+        "name": "MiFID II",
+        "parents": ["Regulatory Reporting", "Record Retention"],
+        "type": "regulatory",
+        "jurisdiction": "EU",
+        "owner": "Regulatory Reporting",
+        "description": "MiFID II / MiFIR transaction reporting to the competent authority by the next working day, and post-trade transparency; records are kept five years."
+      },
+      {
+        "name": "Record Retention",
+        "type": "retention",
+        "owner": "Compliance",
+        "description": "Trade, event, valuation and message records are kept for the life of the trade plus at least five years, then deleted."
+      },
+      {
+        "name": "Regulatory Reporting",
+        "type": "regulatory",
+        "owner": "Regulatory Reporting",
+        "description": "Derivatives are reported to trade repositories and regulators: complete, accurate and on time, with a UTI for every trade and an LEI for every counterparty."
+      }
+    ]
+  },
+  "conceptual": {
+    "concepts": [
+      {
+        "name": "Legal Agreement",
+        "description": "The legal framework under which parties trade, such as an ISDA master agreement or a credit support annex.",
+        "tags": ["confidential"],
+        "governance": {"owner": "Operations", "classification": "Confidential", "criticality": "High"}
+      },
+      {
+        "name": "Market Data",
+        "description": "Observed market prices and calendars used to fix, schedule and value trades.",
+        "tags": ["market_data"],
+        "governance": {"owner": "Middle Office", "classification": "Internal", "criticality": "Medium"}
+      },
+      {
+        "name": "Message",
+        "description": "FpML documents exchanged with counterparties, central counterparties and trade repositories.",
+        "tags": ["confidential"],
+        "governance": {"owner": "Operations", "classification": "Confidential", "criticality": "Medium"}
+      },
+      {
+        "name": "Party",
+        "description": "A legal entity or person the bank deals with or acts for: counterparties, clients, brokers, central counterparties and the bank itself, with their accounts and people.",
+        "tags": ["kyc"],
+        "governance": {"owner": "Operations", "classification": "Confidential", "criticality": "High"}
+      },
+      {
+        "name": "Portfolio",
+        "description": "The bank's internal books and portfolios that trades are booked into, owned by a desk.",
+        "governance": {"owner": "Front Office", "classification": "Internal", "criticality": "Medium"}
+      },
+      {
+        "name": "Product",
+        "description": "The economic terms of what is traded: interest rate swaps, FX, credit default swaps and swaptions, following the FpML product model.",
+        "tags": ["trade_data"],
+        "governance": {"owner": "Front Office", "classification": "Confidential", "criticality": "High"}
+      },
+      {
+        "name": "Reference Data",
+        "description": "Standard code lists the other concepts use: currencies, countries, business centers, rate indices and the FpML coding schemes.",
+        "tags": ["reference_data"],
+        "governance": {"owner": "Operations", "classification": "Public", "criticality": "Low"}
+      },
+      {
+        "name": "Trade",
+        "description": "One executed OTC derivative deal between parties in one product, and everything that happens to it over its life.",
+        "tags": ["trade_data", "regulatory_reporting"],
+        "governance": {
+          "owner": "Front Office",
+          "classification": "Confidential",
+          "criticality": "Critical",
+          "policies": ["Market Abuse (MAR)"]
+        }
+      },
+      {
+        "name": "Valuation",
+        "description": "The value and risk measures of trades as of a date.",
+        "tags": ["valuation", "sensitive_financial"],
+        "governance": {"owner": "Risk", "classification": "Confidential", "criticality": "High"}
+      }
+    ],
+    "relationships": [
+      {
+        "parent": "Legal Agreement",
+        "child": "Trade",
+        "cardinality": "1..M",
+        "name": "governs",
+        "description": "A master agreement governs the trades done under it."
+      },
+      {
+        "parent": "Message",
+        "child": "Party",
+        "cardinality": "M..M",
+        "name": "is sent to",
+        "description": "A message is routed to parties by role."
+      },
+      {
+        "parent": "Message",
+        "child": "Trade",
+        "cardinality": "M..M",
+        "name": "reports",
+        "description": "A message confirms, clears or reports trades."
+      },
+      {
+        "parent": "Party",
+        "child": "Legal Agreement",
+        "cardinality": "M..M",
+        "name": "signs",
+        "description": "Parties sign master agreements; an agreement binds two or more parties."
+      },
+      {
+        "parent": "Party",
+        "child": "Portfolio",
+        "cardinality": "1..M",
+        "name": "owns",
+        "description": "The bank or one of its desks owns books."
+      },
+      {
+        "parent": "Party",
+        "child": "Product",
+        "cardinality": "1..M",
+        "name": "takes part in",
+        "description": "A party pays or receives a swap stream, or is the reference entity of a credit default swap."
+      },
+      {
+        "parent": "Party",
+        "child": "Trade",
+        "cardinality": "M..M",
+        "name": "is a party to",
+        "description": "A party plays a role (counterparty, broker, clearing house) on many trades; a trade involves several parties."
+      },
+      {
+        "parent": "Portfolio",
+        "child": "Trade",
+        "cardinality": "1..M",
+        "name": "holds",
+        "description": "A book holds many trades."
+      },
+      {
+        "parent": "Product",
+        "child": "Reference Data",
+        "cardinality": "M..M",
+        "name": "uses",
+        "description": "Currencies, indices, conventions and credit events in the product terms."
+      },
+      {
+        "parent": "Product",
+        "child": "Trade",
+        "cardinality": "1..1",
+        "name": "is traded as",
+        "description": "The economic terms of one trade."
+      },
+      {
+        "parent": "Reference Data",
+        "child": "Legal Agreement",
+        "cardinality": "1..M",
+        "name": "classifies",
+        "description": "An agreement type classifies many master agreements."
+      },
+      {
+        "parent": "Reference Data",
+        "child": "Market Data",
+        "cardinality": "1..M",
+        "name": "defines",
+        "description": "Indices, currencies and business centers the market data refers to."
+      },
+      {
+        "parent": "Reference Data",
+        "child": "Message",
+        "cardinality": "1..M",
+        "name": "types",
+        "description": "A message type types many messages."
+      },
+      {
+        "parent": "Reference Data",
+        "child": "Party",
+        "cardinality": "1..M",
+        "name": "classifies",
+        "description": "A currency is the base currency of many accounts."
+      },
+      {
+        "parent": "Reference Data",
+        "child": "Trade",
+        "cardinality": "1..M",
+        "name": "describes",
+        "description": "Trade statuses and lifecycle event types."
+      },
+      {
+        "parent": "Trade",
+        "child": "Valuation",
+        "cardinality": "1..M",
+        "name": "is valued in",
+        "description": "A trade is valued on every valuation date."
+      },
+      {
+        "parent": "Valuation",
+        "child": "Reference Data",
+        "cardinality": "M..M",
+        "name": "measures",
+        "description": "Valuation measure types and currencies."
+      }
+    ]
+  },
+  "logical": {
+    "entities": [
+      {
+        "name": "Account",
+        "concept": "Party",
+        "description": "A cash or securities account owned by a party.",
+        "tags": ["confidential"],
+        "governance": {"owner": "Operations"}
+      },
+      {"name": "Book", "concept": "Portfolio", "description": "An internal book or portfolio."},
+      {"name": "Business Center", "concept": "Reference Data"},
+      {
+        "name": "Coding Scheme",
+        "concept": "Reference Data",
+        "description": "The FpML coding schemes: simple code lists such as day count fractions, business day conventions, party roles and trade statuses."
+      },
+      {"name": "Country", "concept": "Reference Data"},
+      {
+        "name": "Credit Default Swap",
+        "concept": "Product",
+        "description": "Protection against credit events of a reference entity, with its deliverable obligations."
+      },
+      {"name": "Currency", "concept": "Reference Data"},
+      {"name": "Floating Rate Index", "concept": "Reference Data"},
+      {"name": "FX Fixing", "concept": "Market Data", "description": "A published FX fixing for a currency pair."},
+      {
+        "name": "FX Leg",
+        "concept": "Product",
+        "description": "A spot or forward exchange of two currency amounts at an agreed rate."
+      },
+      {"name": "FX Swap", "concept": "Product", "description": "A near and a far FX leg in opposite directions."},
+      {"name": "Holiday Calendar", "concept": "Market Data", "description": "Holidays per business center."},
+      {
+        "name": "Interest Rate Swap",
+        "concept": "Product",
+        "description": "An interest rate swap: two or more streams of payments."
+      },
+      {
+        "name": "Master Agreement",
+        "concept": "Legal Agreement",
+        "description": "A master agreement and the parties to it.",
+        "governance": {"owner": "Operations"}
+      },
+      {
+        "name": "Message",
+        "concept": "Message",
+        "description": "One FpML document with its header.",
+        "governance": {"owner": "Operations"}
+      },
+      {
+        "name": "Party",
+        "concept": "Party",
+        "description": "A legal entity with its identifiers (LEI, BIC, internal ids).",
+        "governance": {"owner": "Operations"}
+      },
+      {
+        "name": "Party Relationship",
+        "concept": "Party",
+        "description": "How parties are related, e.g. parent and ultimate parent.",
+        "governance": {"owner": "Operations"}
+      },
+      {
+        "name": "Person",
+        "concept": "Party",
+        "description": "A named individual working for a party.",
+        "tags": ["pii"],
+        "governance": {"owner": "Operations"}
+      },
+      {"name": "Product", "concept": "Product", "description": "The supertype of everything that can be traded."},
+      {"name": "Rate Fixing", "concept": "Market Data", "description": "A published fixing of a floating rate index."},
+      {
+        "name": "Swap Stream",
+        "concept": "Product",
+        "description": "One leg of a swap with its schedules: calculation periods, payment and reset dates, floating rate, fixed rate and notional steps."
+      },
+      {"name": "Swaption", "concept": "Product", "description": "An option to enter an interest rate swap."},
+      {
+        "name": "Trade",
+        "concept": "Trade",
+        "description": "The trade header with its identifiers (internal ids, UTI, USI).",
+        "governance": {"criticality": "Critical"}
+      },
+      {
+        "name": "Trade Event",
+        "concept": "Trade",
+        "description": "A lifecycle event of a trade (new, amendment, novation, termination) with its details."
+      },
+      {
+        "name": "Valuation",
+        "concept": "Valuation",
+        "description": "A valuation run for a trade on a date.",
+        "governance": {"owner": "Risk"}
+      },
+      {
+        "name": "Valuation Measure",
+        "concept": "Valuation",
+        "description": "One measure of a valuation, such as NPV or DV01.",
+        "governance": {"owner": "Risk"}
+      }
+    ],
+    "relationships": [
+      {
+        "parent": "Book",
+        "child": "Trade",
+        "cardinality": "1..M",
+        "name": "holds",
+        "description": "A book holds many trades."
+      },
+      {
+        "parent": "Business Center",
+        "child": "Holiday Calendar",
+        "cardinality": "1..M",
+        "name": "observes",
+        "description": "A business center observes many holidays."
+      },
+      {
+        "parent": "Coding Scheme",
+        "child": "Master Agreement",
+        "cardinality": "1..M",
+        "name": "classifies",
+        "description": "An agreement type classifies many master agreements."
+      },
+      {
+        "parent": "Coding Scheme",
+        "child": "Message",
+        "cardinality": "1..M",
+        "name": "types",
+        "description": "A message type types many messages."
+      },
+      {
+        "parent": "Coding Scheme",
+        "child": "Party",
+        "cardinality": "1..M",
+        "name": "classifies",
+        "description": "A party type classifies many parties."
+      },
+      {
+        "parent": "Coding Scheme",
+        "child": "Product",
+        "cardinality": "1..M",
+        "name": "types",
+        "description": "A product type types many products."
+      },
+      {"parent": "Coding Scheme", "child": "Rate Fixing", "cardinality": "1..M"},
+      {"parent": "Coding Scheme", "child": "Swap Stream", "cardinality": "1..M"},
+      {"parent": "Coding Scheme", "child": "Swaption", "cardinality": "1..M"},
+      {
+        "parent": "Coding Scheme",
+        "child": "Trade",
+        "cardinality": "1..M",
+        "name": "describes",
+        "description": "A status describes many trades."
+      },
+      {"parent": "Coding Scheme", "child": "Trade Event", "cardinality": "1..M"},
+      {
+        "parent": "Coding Scheme",
+        "child": "Valuation Measure",
+        "cardinality": "1..M",
+        "name": "is measured as",
+        "description": "A measure type appears in many valuations."
+      },
+      {
+        "parent": "Country",
+        "child": "Business Center",
+        "cardinality": "1..M",
+        "name": "hosts",
+        "description": "A country hosts many business centers."
+      },
+      {
+        "parent": "Country",
+        "child": "Master Agreement",
+        "cardinality": "1..M",
+        "name": "governs",
+        "description": "A country's law governs many agreements."
+      },
+      {
+        "parent": "Country",
+        "child": "Party",
+        "cardinality": "1..M",
+        "name": "domiciles",
+        "description": "A country is the domicile of many parties."
+      },
+      {
+        "parent": "Credit Default Swap",
+        "child": "Coding Scheme",
+        "cardinality": "M..M",
+        "name": "protects against",
+        "description": "A CDS protects against several credit event types; an event type applies to many CDS."
+      },
+      {
+        "parent": "Currency",
+        "child": "Account",
+        "cardinality": "1..M",
+        "name": "denominates",
+        "description": "A currency is the base currency of many accounts."
+      },
+      {"parent": "Currency", "child": "Credit Default Swap", "cardinality": "1..M"},
+      {
+        "parent": "Currency",
+        "child": "Floating Rate Index",
+        "cardinality": "1..M",
+        "name": "denominates",
+        "description": "A currency denominates many rate indices."
+      },
+      {"parent": "Currency", "child": "FX Fixing", "cardinality": "1..M"},
+      {"parent": "Currency", "child": "FX Leg", "cardinality": "1..M"},
+      {
+        "parent": "Currency",
+        "child": "Swap Stream",
+        "cardinality": "1..M",
+        "name": "denominates",
+        "description": "A currency denominates many streams."
+      },
+      {"parent": "Currency", "child": "Swaption", "cardinality": "1..M"},
+      {"parent": "Currency", "child": "Valuation Measure", "cardinality": "1..M"},
+      {
+        "parent": "Floating Rate Index",
+        "child": "Rate Fixing",
+        "cardinality": "1..M",
+        "name": "is fixed as",
+        "description": "An index has many fixings."
+      },
+      {
+        "parent": "Floating Rate Index",
+        "child": "Swap Stream",
+        "cardinality": "1..M",
+        "name": "is used by",
+        "description": "An index is used by many floating streams."
+      },
+      {
+        "parent": "FX Leg",
+        "child": "FX Swap",
+        "cardinality": "1..M",
+        "name": "is near leg of",
+        "description": "An FX leg can be the near leg of a swap."
+      },
+      {
+        "parent": "Interest Rate Swap",
+        "child": "Swap Stream",
+        "cardinality": "1..M",
+        "name": "has streams",
+        "description": "A swap has two or more streams."
+      },
+      {
+        "parent": "Interest Rate Swap",
+        "child": "Swaption",
+        "cardinality": "1..M",
+        "name": "underlies",
+        "description": "A swap can underlie swaptions."
+      },
+      {
+        "parent": "Master Agreement",
+        "child": "Trade",
+        "cardinality": "1..M",
+        "name": "governs",
+        "description": "A master agreement governs many trades."
+      },
+      {
+        "parent": "Message",
+        "child": "Message",
+        "cardinality": "1..M",
+        "name": "is answered by",
+        "description": "A message can be answered by other messages."
+      },
+      {
+        "parent": "Message",
+        "child": "Party",
+        "cardinality": "M..M",
+        "name": "is routed to",
+        "description": "A message is routed to several recipients by role (sendTo, copyTo)."
+      },
+      {
+        "parent": "Message",
+        "child": "Trade",
+        "cardinality": "M..M",
+        "name": "carries",
+        "description": "A message carries one or more trades; a trade appears in many messages over its life."
+      },
+      {
+        "parent": "Message",
+        "child": "Trade Event",
+        "cardinality": "1..M",
+        "name": "triggers",
+        "description": "A message can trigger many events."
+      },
+      {
+        "parent": "Party",
+        "child": "Account",
+        "cardinality": "1..M",
+        "name": "owns",
+        "description": "A party owns many accounts."
+      },
+      {
+        "parent": "Party",
+        "child": "Book",
+        "cardinality": "1..M",
+        "name": "books trades for",
+        "description": "A legal entity owns many books."
+      },
+      {"parent": "Party", "child": "Credit Default Swap", "cardinality": "1..M"},
+      {"parent": "Party", "child": "FX Leg", "cardinality": "1..M"},
+      {
+        "parent": "Party",
+        "child": "Master Agreement",
+        "cardinality": "M..M",
+        "name": "is party to",
+        "description": "A party can be party to many master agreements and an agreement has (at least) two parties."
+      },
+      {
+        "parent": "Party",
+        "child": "Party Relationship",
+        "cardinality": "1..M",
+        "name": "is related as child",
+        "description": "A party can be the child in many relationships."
+      },
+      {
+        "parent": "Party",
+        "child": "Person",
+        "cardinality": "1..M",
+        "name": "employs",
+        "description": "A party employs many persons."
+      },
+      {
+        "parent": "Party",
+        "child": "Swap Stream",
+        "cardinality": "1..M",
+        "name": "pays",
+        "description": "A party pays many streams."
+      },
+      {"parent": "Party", "child": "Swaption", "cardinality": "1..M"},
+      {"parent": "Party", "child": "Trade Event", "cardinality": "1..M"},
+      {
+        "parent": "Product",
+        "child": "Credit Default Swap",
+        "cardinality": "1..1",
+        "name": "is specialised as",
+        "description": "Each product is described by exactly one subtype row."
+      },
+      {
+        "parent": "Product",
+        "child": "FX Leg",
+        "cardinality": "1..1",
+        "name": "is specialised as",
+        "description": "Each product is described by exactly one subtype row."
+      },
+      {
+        "parent": "Product",
+        "child": "FX Swap",
+        "cardinality": "1..1",
+        "name": "is specialised as",
+        "description": "Each product is described by exactly one subtype row."
+      },
+      {
+        "parent": "Product",
+        "child": "Interest Rate Swap",
+        "cardinality": "1..1",
+        "name": "is specialised as",
+        "description": "Each product is described by exactly one subtype row."
+      },
+      {
+        "parent": "Product",
+        "child": "Swaption",
+        "cardinality": "1..1",
+        "name": "is specialised as",
+        "description": "Each product is described by exactly one subtype row."
+      },
+      {
+        "parent": "Product",
+        "child": "Trade",
+        "cardinality": "1..1",
+        "name": "is traded as",
+        "description": "Each product is traded in exactly one trade."
+      },
+      {
+        "parent": "Swap Stream",
+        "child": "Business Center",
+        "cardinality": "M..M",
+        "name": "uses calendars of",
+        "description": "A stream adjusts its dates using several business centers, each for a purpose (calculation, payment, fixing)."
+      },
+      {
+        "parent": "Trade Event",
+        "child": "Trade Event",
+        "cardinality": "1..M",
+        "name": "is followed by",
+        "description": "An event can be followed by later events."
+      },
+      {
+        "parent": "Trade",
+        "child": "Party",
+        "cardinality": "M..M",
+        "name": "involves",
+        "description": "A trade involves several parties in different roles and a party is involved in many trades."
+      },
+      {
+        "parent": "Trade",
+        "child": "Trade Event",
+        "cardinality": "1..M",
+        "name": "has events",
+        "description": "A trade has many lifecycle events."
+      },
+      {
+        "parent": "Trade",
+        "child": "Valuation",
+        "cardinality": "1..M",
+        "name": "is valued in",
+        "description": "A trade is valued many times."
+      },
+      {
+        "parent": "Valuation",
+        "child": "Coding Scheme",
+        "cardinality": "M..M",
+        "name": "measures",
+        "description": "A valuation set contains several measures and a measure type is used in many valuation sets."
+      },
+      {
+        "parent": "Valuation",
+        "child": "Valuation Measure",
+        "cardinality": "1..M",
+        "name": "has measures",
+        "description": "A valuation set has many measures."
+      }
+    ]
+  },
+  "catalogs": [
+    {
+      "name": "banking",
+      "displayName": "Banking",
+      "description": "Unity Catalog catalog holding the OTC derivatives model.",
+      "governance": {"classification": "Internal"}
+    }
+  ],
+  "schemas": [
+    {
+      "name": "market",
+      "catalog": "banking",
+      "displayName": "Market Data",
+      "description": "Rate and FX fixings and holiday calendars used to reset floating streams and adjust dates.",
+      "tags": ["market_data"],
+      "properties": {"organization_unit": "Markets"},
+      "governance": {"steward": "Market Data Steward", "classification": "Internal", "criticality": "Medium"}
+    },
+    {
+      "name": "messaging",
+      "catalog": "banking",
+      "displayName": "FpML Messaging",
+      "description": "FpML documents exchanged with counterparties and repositories, with routing and the trades they carry.",
+      "tags": ["confidential"],
+      "properties": {"organization_unit": "Operations"},
+      "governance": {
+        "steward": "Integration Team",
+        "classification": "Confidential",
+        "criticality": "High",
+        "policies": ["Record Retention"]
+      }
+    },
+    {
+      "name": "party",
+      "catalog": "banking",
+      "displayName": "Party and Legal",
+      "description": "Legal entities, identifiers, people, accounts, books and master agreements.",
+      "tags": ["master_data"],
+      "properties": {"organization_unit": "Operations"},
+      "governance": {"steward": "Client Reference Data", "classification": "Confidential", "criticality": "High"}
+    },
+    {
+      "name": "product",
+      "catalog": "banking",
+      "displayName": "Product",
+      "description": "What was traded: the product supertype and its interest rate swap, FX, credit and swaption subtypes with their schedules.",
+      "tags": ["trade_data"],
+      "properties": {"organization_unit": "Markets"},
+      "governance": {"steward": "Product Control", "classification": "Confidential", "criticality": "High"}
+    },
+    {
+      "name": "ref",
+      "catalog": "banking",
+      "displayName": "Reference (FpML coding schemes)",
+      "description": "Code lists that mirror FpML coding schemes: currencies, day counts, conventions, roles, product types, identifier schemes.",
+      "tags": ["reference_data"],
+      "properties": {"organization_unit": "Group Data"},
+      "governance": {"steward": "Reference Data Steward", "classification": "Public", "criticality": "Low"}
+    },
+    {
+      "name": "reporting",
+      "catalog": "banking",
+      "displayName": "Reporting",
+      "description": "Views and materialized views for reports and dashboards. Read-only; defined over the other schemas.",
+      "properties": {"organization_unit": "Group Data"},
+      "governance": {"steward": "BI Team", "classification": "Internal", "criticality": "High"}
+    },
+    {
+      "name": "trade",
+      "catalog": "banking",
+      "displayName": "Trade",
+      "description": "Trade header, identifiers, party roles and lifecycle events (amendments, novations).",
+      "tags": ["trade_data", "regulatory_reporting"],
+      "properties": {"organization_unit": "Markets"},
+      "governance": {
+        "steward": "Trade Data Steward",
+        "classification": "Confidential",
+        "criticality": "High",
+        "policies": ["Market Abuse (MAR)"]
+      }
+    },
+    {
+      "name": "valuation",
+      "catalog": "banking",
+      "displayName": "Valuation",
+      "description": "Valuation sets and measures (NPV, sensitivities) per trade and date.",
+      "tags": ["valuation", "sensitive_financial"],
+      "properties": {"organization_unit": "Finance and Risk"},
+      "governance": {
+        "steward": "Risk Data Steward",
+        "classification": "Confidential",
+        "criticality": "High",
+        "policies": ["Record Retention"]
+      }
+    }
+  ],
+  "tables": [
+    {
+      "name": "fx_rate_fixing",
+      "schema": "banking.market",
+      "entity": "FX Fixing",
+      "displayName": "FX Rate Fixing",
+      "description": "Published FX fixing for a currency pair and date, e.g. for non-deliverable forwards.",
+      "properties": {"fpml_element": "fxFixing"},
+      "sla": {"frequency": "realtime"},
+      "columns": [
+        {
+          "name": "currency1_code",
+          "displayName": "Currency1 Code",
+          "type": "STRING",
+          "description": "First currency of the pair",
+          "pk": true
+        },
+        {
+          "name": "currency2_code",
+          "displayName": "Currency2 Code",
+          "type": "STRING",
+          "description": "Second currency of the pair",
+          "pk": true
+        },
+        {"name": "fixing_date", "displayName": "Fixing Date", "type": "DATE", "description": "Fixing date", "pk": true},
+        {"name": "rate", "displayName": "Rate", "type": "DECIMAL(18,10)", "description": "Fixing rate", "notNull": true},
+        {
+          "name": "quote_basis",
+          "displayName": "Quote Basis",
+          "type": "STRING",
+          "description": "Currency1PerCurrency2 or Currency2PerCurrency1"
+        },
+        {
+          "name": "source_system",
+          "displayName": "Source System",
+          "type": "STRING",
+          "description": "Fixing source, e.g. WM/Refinitiv"
+        }
+      ]
+    },
+    {
+      "name": "holiday_calendar",
+      "schema": "banking.market",
+      "entity": "Holiday Calendar",
+      "displayName": "Holiday Calendar",
+      "description": "Holidays per business center; drives business day adjustment.",
+      "sla": {"frequency": "yearly", "time": "00:30"},
+      "columns": [
+        {
+          "name": "business_center_code",
+          "displayName": "Business Center Code",
+          "type": "STRING",
+          "description": "Business center",
+          "pk": true
+        },
+        {
+          "name": "holiday_date",
+          "displayName": "Holiday Date",
+          "type": "DATE",
+          "description": "Date of the holiday",
+          "pk": true
+        },
+        {"name": "holiday_name", "displayName": "Holiday Name", "type": "STRING", "description": "Name of the holiday"}
+      ]
+    },
+    {
+      "name": "rate_fixing",
+      "schema": "banking.market",
+      "entity": "Rate Fixing",
+      "displayName": "Rate Fixing",
+      "description": "Published fixing of a floating rate index for a tenor and date, used to reset floating streams.",
+      "properties": {"fpml_element": "rateObservation"},
+      "governance": {"criticality": "High"},
+      "sla": {"frequency": "daily", "time": "05:30"},
+      "columns": [
+        {
+          "name": "floating_rate_index_code",
+          "displayName": "Floating Rate Index Code",
+          "type": "STRING",
+          "description": "Index that was fixed",
+          "pk": true
+        },
+        {
+          "name": "index_tenor_multiplier",
+          "displayName": "Index Tenor Multiplier",
+          "type": "INT",
+          "description": "Tenor units, e.g. 3",
+          "pk": true
+        },
+        {
+          "name": "index_tenor_unit_code",
+          "displayName": "Index Tenor Unit Code",
+          "type": "STRING",
+          "description": "Tenor unit, e.g. M"
+        },
+        {
+          "name": "fixing_date",
+          "displayName": "Fixing Date",
+          "type": "DATE",
+          "description": "Date the rate was observed",
+          "pk": true
+        },
+        {
+          "name": "rate",
+          "displayName": "Rate",
+          "type": "DECIMAL(18,8)",
+          "description": "Fixed rate as a decimal fraction",
+          "notNull": true
+        },
+        {"name": "source_system", "displayName": "Source System", "type": "STRING", "description": "Market data provider"},
+        {"name": "published_at", "displayName": "Published At", "type": "TIMESTAMP", "description": "Publication time (UTC)"}
+      ]
+    },
+    {
+      "name": "fpml_message",
+      "schema": "banking.messaging",
+      "entity": "Message",
+      "displayName": "FpML Message",
+      "description": "An FpML document exchanged with a counterparty, CCP or repository, including the raw XML (FpML messageHeader).",
+      "tags": ["confidential"],
+      "properties": {"fpml_element": "DataDocument/header"},
+      "sla": {"frequency": "realtime"},
+      "columns": [
+        {"name": "message_id", "displayName": "Message ID", "type": "BIGINT", "description": "Surrogate key", "pk": true},
+        {
+          "name": "fpml_message_id",
+          "displayName": "FpML Message ID",
+          "type": "STRING",
+          "description": "messageId from the FpML header",
+          "notNull": true,
+          "unique": true
+        },
+        {
+          "name": "message_type_code",
+          "displayName": "Message Type Code",
+          "type": "STRING",
+          "description": "Kind of message",
+          "notNull": true
+        },
+        {
+          "name": "fpml_version",
+          "displayName": "FpML Version",
+          "type": "STRING",
+          "description": "FpML version of the document, e.g. 5.13"
+        },
+        {
+          "name": "sent_by_party_id",
+          "displayName": "Sent By Party ID",
+          "type": "BIGINT",
+          "description": "Sender (sentBy)",
+          "notNull": true
+        },
+        {
+          "name": "creation_timestamp",
+          "displayName": "Creation Timestamp",
+          "type": "TIMESTAMP",
+          "description": "creationTimestamp from the header (UTC)",
+          "notNull": true
+        },
+        {
+          "name": "correlation_id",
+          "displayName": "Correlation ID",
+          "type": "STRING",
+          "description": "correlationId linking request and response"
+        },
+        {
+          "name": "sequence_number",
+          "displayName": "Sequence Number",
+          "type": "INT",
+          "description": "sequenceNumber within the correlation"
+        },
+        {
+          "name": "in_reply_to_message_id",
+          "displayName": "In Reply To Message ID",
+          "type": "BIGINT",
+          "description": "Message this one answers (inReplyTo)"
+        },
+        {
+          "name": "raw_document",
+          "displayName": "Raw Document",
+          "type": "STRING",
+          "description": "Complete FpML XML document",
+          "tags": ["confidential"]
+        },
+        {
+          "name": "document_hash",
+          "displayName": "Document Hash",
+          "type": "STRING",
+          "description": "SHA-256 of the raw document, for integrity checks"
+        },
+        {
+          "name": "ingested_at",
+          "displayName": "Ingested At",
+          "type": "TIMESTAMP",
+          "description": "When the message landed in the lakehouse (UTC)",
+          "notNull": true,
+          "default": "current_timestamp()"
+        }
+      ]
+    },
+    {
+      "name": "message_recipient",
+      "schema": "banking.messaging",
+      "displayName": "Message Recipient",
+      "description": "Routing of a message: recipients by role (sendTo, copyTo).",
+      "properties": {"fpml_element": "header/sendTo"},
+      "governance": {"criticality": "Low"},
+      "sla": {"frequency": "realtime"},
+      "columns": [
+        {"name": "message_id", "displayName": "Message ID", "type": "BIGINT", "description": "The message", "pk": true},
+        {"name": "party_id", "displayName": "Party ID", "type": "BIGINT", "description": "The recipient", "pk": true},
+        {
+          "name": "recipient_role",
+          "displayName": "Recipient Role",
+          "type": "STRING",
+          "description": "SendTo or CopyTo",
+          "pk": true
+        }
+      ]
+    },
+    {
+      "name": "message_trade",
+      "schema": "banking.messaging",
+      "displayName": "Message Trade",
+      "description": "Bridge table: trades contained in a message (many-to-many).",
+      "governance": {"criticality": "Medium"},
+      "sla": {"frequency": "minute"},
+      "columns": [
+        {"name": "message_id", "displayName": "Message ID", "type": "BIGINT", "description": "The message", "pk": true},
+        {"name": "trade_id", "displayName": "Trade ID", "type": "BIGINT", "description": "A trade in the message", "pk": true}
+      ]
+    },
+    {
+      "name": "account",
+      "schema": "banking.party",
+      "entity": "Account",
+      "displayName": "Account",
+      "description": "A cash or securities account owned by a party, referenced from trades (FpML account).",
+      "tags": ["confidential"],
+      "properties": {"fpml_element": "account"},
+      "sla": {"frequency": "daily", "time": "01:30"},
+      "columns": [
+        {"name": "account_id", "displayName": "Account ID", "type": "BIGINT", "description": "Surrogate key", "pk": true},
+        {"name": "party_id", "displayName": "Party ID", "type": "BIGINT", "description": "Account owner", "notNull": true},
+        {
+          "name": "account_name",
+          "displayName": "Account Name",
+          "type": "STRING",
+          "description": "Account name",
+          "notNull": true
+        },
+        {
+          "name": "account_number",
+          "displayName": "Account Number",
+          "type": "STRING",
+          "description": "Account number",
+          "unique": true,
+          "tags": ["confidential"]
+        },
+        {"name": "account_type", "displayName": "Account Type", "type": "STRING", "description": "Cash, Custody, Margin, ..."},
+        {
+          "name": "currency_code",
+          "displayName": "Currency Code",
+          "type": "STRING",
+          "description": "Base currency of the account"
+        },
+        {"name": "opened_date", "displayName": "Opened Date", "type": "DATE", "description": "Date the account was opened"},
+        {
+          "name": "closed_date",
+          "displayName": "Closed Date",
+          "type": "DATE",
+          "description": "Date the account was closed; null while open"
+        }
+      ]
+    },
+    {
+      "name": "book",
+      "schema": "banking.party",
+      "entity": "Book",
+      "displayName": "Trading Book",
+      "description": "An internal book or portfolio that trades are booked into.",
+      "properties": {"fpml_element": "partyTradeInformation/bookId"},
+      "governance": {"criticality": "Medium"},
+      "sla": {"frequency": "daily", "time": "01:00"},
+      "columns": [
+        {"name": "book_id", "displayName": "Book ID", "type": "BIGINT", "description": "Surrogate key", "pk": true},
+        {
+          "name": "book_name",
+          "displayName": "Book Name",
+          "type": "STRING",
+          "description": "Book name, e.g. Rates Desk London",
+          "notNull": true,
+          "unique": true
+        },
+        {"name": "desk_name", "displayName": "Desk Name", "type": "STRING", "description": "Trading desk that owns the book"},
+        {
+          "name": "legal_entity_party_id",
+          "displayName": "Legal Entity Party ID",
+          "type": "BIGINT",
+          "description": "Internal legal entity that owns the book",
+          "notNull": true
+        },
+        {
+          "name": "cost_centre",
+          "displayName": "Cost Centre",
+          "type": "STRING",
+          "description": "Cost centre for P&L allocation"
+        },
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the book is closed",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "master_agreement",
+      "schema": "banking.party",
+      "entity": "Master Agreement",
+      "displayName": "Master Agreement",
+      "description": "The legal master agreement (e.g. ISDA 2002) governing a set of trades between parties (FpML masterAgreement).",
+      "properties": {"fpml_element": "masterAgreement"},
+      "sla": {"frequency": "daily", "time": "01:00"},
+      "columns": [
+        {
+          "name": "master_agreement_id",
+          "displayName": "Master Agreement ID",
+          "type": "BIGINT",
+          "description": "Surrogate key",
+          "pk": true
+        },
+        {
+          "name": "master_agreement_type_code",
+          "displayName": "Master Agreement Type Code",
+          "type": "STRING",
+          "description": "Agreement family",
+          "notNull": true
+        },
+        {
+          "name": "agreement_version",
+          "displayName": "Agreement Version",
+          "type": "STRING",
+          "description": "Published version, e.g. 2002"
+        },
+        {
+          "name": "agreement_date",
+          "displayName": "Agreement Date",
+          "type": "DATE",
+          "description": "Date the agreement was signed",
+          "notNull": true
+        },
+        {
+          "name": "governing_law_country_code",
+          "displayName": "Governing Law Country Code",
+          "type": "STRING",
+          "description": "Country whose law governs the agreement"
+        }
+      ]
+    },
+    {
+      "name": "master_agreement_party",
+      "schema": "banking.party",
+      "entity": "Master Agreement",
+      "displayName": "Master Agreement Party",
+      "description": "Bridge table: the parties to a master agreement (usually two).",
+      "sla": {"frequency": "daily", "time": "01:30"},
+      "columns": [
+        {
+          "name": "master_agreement_id",
+          "displayName": "Master Agreement ID",
+          "type": "BIGINT",
+          "description": "Agreement",
+          "pk": true
+        },
+        {"name": "party_id", "displayName": "Party ID", "type": "BIGINT", "description": "Party to the agreement", "pk": true},
+        {
+          "name": "party_side",
+          "displayName": "Party Side",
+          "type": "STRING",
+          "description": "PartyA or PartyB as written in the agreement",
+          "notNull": true
+        }
+      ]
+    },
+    {
+      "name": "party",
+      "schema": "banking.party",
+      "entity": "Party",
+      "displayName": "Party",
+      "description": "A legal entity or organisation that appears in trades: the bank's own entities, clients, brokers, exchanges and clearing houses. Identifiers such as LEI and BIC live in party_identifier.",
+      "properties": {"fpml_element": "party"},
+      "sla": {"frequency": "daily", "time": "01:00"},
+      "columns": [
+        {"name": "party_id", "displayName": "Party ID", "type": "BIGINT", "description": "Surrogate key", "pk": true},
+        {
+          "name": "party_name",
+          "displayName": "Party Name",
+          "type": "STRING",
+          "description": "Short display name",
+          "notNull": true
+        },
+        {"name": "legal_name", "displayName": "Legal Name", "type": "STRING", "description": "Full registered legal name"},
+        {
+          "name": "party_type_code",
+          "displayName": "Party Type Code",
+          "type": "STRING",
+          "description": "Legal-entity classification",
+          "notNull": true
+        },
+        {"name": "country_code", "displayName": "Country Code", "type": "STRING", "description": "Country of incorporation"},
+        {
+          "name": "is_internal",
+          "displayName": "Is Internal",
+          "type": "BOOLEAN",
+          "description": "true for legal entities of the bank itself",
+          "notNull": true,
+          "default": "false"
+        },
+        {
+          "name": "created_at",
+          "displayName": "Created At",
+          "type": "TIMESTAMP",
+          "description": "Row creation time (UTC)",
+          "notNull": true,
+          "default": "current_timestamp()"
+        },
+        {"name": "updated_at", "displayName": "Updated At", "type": "TIMESTAMP", "description": "Last update time (UTC)"}
+      ]
+    },
+    {
+      "name": "party_identifier",
+      "schema": "banking.party",
+      "entity": "Party",
+      "displayName": "Party Identifier",
+      "description": "An identifier of a party under a scheme (LEI, BIC, internal id). A party can have many identifiers (FpML partyId).",
+      "tags": ["kyc"],
+      "properties": {"fpml_element": "party/partyId"},
+      "sla": {"frequency": "daily", "time": "01:30"},
+      "columns": [
+        {"name": "party_id", "displayName": "Party ID", "type": "BIGINT", "description": "Party", "pk": true},
+        {
+          "name": "id_scheme_code",
+          "displayName": "ID Scheme Code",
+          "type": "STRING",
+          "description": "Identifier scheme",
+          "pk": true
+        },
+        {
+          "name": "identifier_value",
+          "displayName": "Identifier Value",
+          "type": "STRING",
+          "description": "The identifier, e.g. a 20-character LEI",
+          "notNull": true,
+          "tags": ["kyc"]
+        }
+      ]
+    },
+    {
+      "name": "party_relationship",
+      "schema": "banking.party",
+      "entity": "Party Relationship",
+      "displayName": "Party Relationship",
+      "description": "Corporate hierarchy between parties, e.g. parent, ultimate parent or clearing member. Composite key: one row per related pair and relationship type.",
+      "governance": {"criticality": "Medium"},
+      "sla": {"frequency": "daily", "time": "01:30"},
+      "columns": [
+        {"name": "party_id", "displayName": "Party ID", "type": "BIGINT", "description": "The party (child side)", "pk": true},
+        {
+          "name": "related_party_id",
+          "displayName": "Related Party ID",
+          "type": "BIGINT",
+          "description": "The related party (parent side)",
+          "pk": true
+        },
+        {
+          "name": "relationship_type",
+          "displayName": "Relationship Type",
+          "type": "STRING",
+          "description": "Parent, UltimateParent, ClearingMember, ...",
+          "pk": true
+        },
+        {
+          "name": "valid_from",
+          "displayName": "Valid From",
+          "type": "DATE",
+          "description": "First day the relationship applies"
+        },
+        {"name": "valid_to", "displayName": "Valid To", "type": "DATE", "description": "Last day; null while current"}
+      ]
+    },
+    {
+      "name": "person",
+      "schema": "banking.party",
+      "entity": "Person",
+      "displayName": "Person",
+      "description": "A named individual working for a party, e.g. a trader or a client contact. Contains personal data.",
+      "tags": ["pii"],
+      "governance": {"policies": ["Mask Personal Data"]},
+      "sla": {"frequency": "daily", "time": "01:30"},
+      "columns": [
+        {"name": "person_id", "displayName": "Person ID", "type": "BIGINT", "description": "Surrogate key", "pk": true},
+        {"name": "party_id", "displayName": "Party ID", "type": "BIGINT", "description": "Employer", "notNull": true},
+        {
+          "name": "first_name",
+          "displayName": "First Name",
+          "type": "STRING",
+          "description": "Given name",
+          "notNull": true,
+          "tags": ["pii"]
+        },
+        {
+          "name": "last_name",
+          "displayName": "Last Name",
+          "type": "STRING",
+          "description": "Family name",
+          "notNull": true,
+          "tags": ["pii"]
+        },
+        {"name": "email", "displayName": "Email", "type": "STRING", "description": "Business e-mail address", "tags": ["pii"]},
+        {"name": "phone", "displayName": "Phone", "type": "STRING", "description": "Business telephone", "tags": ["pii"]},
+        {"name": "job_title", "displayName": "Job Title", "type": "STRING", "description": "Job title"},
+        {
+          "name": "is_trader",
+          "displayName": "Is Trader",
+          "type": "BOOLEAN",
+          "description": "true when the person may execute trades",
+          "notNull": true,
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "calculation_period_dates",
+      "schema": "banking.product",
+      "entity": "Swap Stream",
+      "displayName": "Calculation Period Dates",
+      "description": "Effective and termination dates and the rule that splits the stream into calculation periods (FpML calculationPeriodDates).",
+      "properties": {"fpml_element": "calculationPeriodDates"},
+      "sla": {"frequency": "daily", "time": "03:00"},
+      "columns": [
+        {"name": "swap_stream_id", "displayName": "Swap Stream ID", "type": "BIGINT", "description": "The stream", "pk": true},
+        {
+          "name": "effective_date",
+          "displayName": "Effective Date",
+          "type": "DATE",
+          "description": "Start of the first calculation period",
+          "notNull": true
+        },
+        {
+          "name": "termination_date",
+          "displayName": "Termination Date",
+          "type": "DATE",
+          "description": "End of the last calculation period",
+          "notNull": true
+        },
+        {
+          "name": "effective_date_bdc_code",
+          "displayName": "Effective Date BDC Code",
+          "type": "STRING",
+          "description": "Adjustment rule for the effective date"
+        },
+        {
+          "name": "termination_date_bdc_code",
+          "displayName": "Termination Date BDC Code",
+          "type": "STRING",
+          "description": "Adjustment rule for the termination date"
+        },
+        {
+          "name": "calculation_period_bdc_code",
+          "displayName": "Calculation Period BDC Code",
+          "type": "STRING",
+          "description": "Adjustment rule for period boundaries"
+        },
+        {
+          "name": "roll_convention_code",
+          "displayName": "Roll Convention Code",
+          "type": "STRING",
+          "description": "Roll convention, e.g. EOM"
+        },
+        {
+          "name": "period_multiplier",
+          "displayName": "Period Multiplier",
+          "type": "INT",
+          "description": "Number of units in the calculation period frequency, e.g. 3",
+          "notNull": true
+        },
+        {
+          "name": "period_unit_code",
+          "displayName": "Period Unit Code",
+          "type": "STRING",
+          "description": "Unit of the calculation period frequency, e.g. M"
+        }
+      ]
+    },
+    {
+      "name": "cds_credit_event",
+      "schema": "banking.product",
+      "displayName": "CDS Credit Event",
+      "description": "Bridge table: credit events a CDS protects against (many-to-many).",
+      "properties": {"fpml_element": "protectionTerms/creditEvents"},
+      "governance": {"criticality": "Medium"},
+      "sla": {"frequency": "daily", "time": "02:30"},
+      "columns": [
+        {"name": "product_id", "displayName": "Product ID", "type": "BIGINT", "description": "The CDS", "pk": true},
+        {
+          "name": "credit_event_type_code",
+          "displayName": "Credit Event Type Code",
+          "type": "STRING",
+          "description": "Event type",
+          "pk": true
+        }
+      ]
+    },
+    {
+      "name": "cds_reference_obligation",
+      "schema": "banking.product",
+      "entity": "Credit Default Swap",
+      "displayName": "CDS Reference Obligation",
+      "description": "A bond or loan that can be delivered on a credit event (FpML referenceObligation).",
+      "properties": {"fpml_element": "referenceObligation"},
+      "governance": {"criticality": "Medium"},
+      "sla": {"frequency": "daily", "time": "02:30"},
+      "columns": [
+        {"name": "product_id", "displayName": "Product ID", "type": "BIGINT", "description": "The CDS", "pk": true},
+        {
+          "name": "obligation_isin",
+          "displayName": "Obligation ISIN",
+          "type": "STRING",
+          "description": "ISIN of the obligation",
+          "pk": true
+        },
+        {
+          "name": "primary_obligor_party_id",
+          "displayName": "Primary Obligor Party ID",
+          "type": "BIGINT",
+          "description": "Issuer of the obligation"
+        }
+      ]
+    },
+    {
+      "name": "credit_default_swap",
+      "schema": "banking.product",
+      "entity": "Credit Default Swap",
+      "displayName": "Credit Default Swap",
+      "description": "Protection against a credit event of a reference entity in return for a periodic fee (FpML creditDefaultSwap).",
+      "properties": {"fpml_element": "creditDefaultSwap"},
+      "sla": {"frequency": "daily", "time": "02:00"},
+      "columns": [
+        {"name": "product_id", "displayName": "Product ID", "type": "BIGINT", "description": "Shared product key", "pk": true},
+        {
+          "name": "reference_entity_party_id",
+          "displayName": "Reference Entity Party ID",
+          "type": "BIGINT",
+          "description": "Entity whose credit is insured",
+          "notNull": true
+        },
+        {
+          "name": "protection_buyer_party_id",
+          "displayName": "Protection Buyer Party ID",
+          "type": "BIGINT",
+          "description": "Pays the fee, receives protection",
+          "notNull": true
+        },
+        {
+          "name": "protection_seller_party_id",
+          "displayName": "Protection Seller Party ID",
+          "type": "BIGINT",
+          "description": "Receives the fee, provides protection",
+          "notNull": true
+        },
+        {
+          "name": "effective_date",
+          "displayName": "Effective Date",
+          "type": "DATE",
+          "description": "Start of protection",
+          "notNull": true
+        },
+        {
+          "name": "scheduled_termination_date",
+          "displayName": "Scheduled Termination Date",
+          "type": "DATE",
+          "description": "End of protection",
+          "notNull": true
+        },
+        {
+          "name": "fixed_rate",
+          "displayName": "Fixed Rate",
+          "type": "DECIMAL(18,8)",
+          "description": "Annual fee (coupon) as a decimal fraction",
+          "tags": ["sensitive_financial"]
+        },
+        {
+          "name": "notional_amount",
+          "displayName": "Notional Amount",
+          "type": "DECIMAL(18,2)",
+          "description": "Protected notional",
+          "notNull": true,
+          "tags": ["sensitive_financial"]
+        },
+        {
+          "name": "notional_currency_code",
+          "displayName": "Notional Currency Code",
+          "type": "STRING",
+          "description": "Currency of the notional",
+          "notNull": true
+        },
+        {
+          "name": "day_count_fraction_code",
+          "displayName": "Day Count Fraction Code",
+          "type": "STRING",
+          "description": "Day count for fee accrual"
+        },
+        {
+          "name": "payment_frequency_multiplier",
+          "displayName": "Payment Frequency Multiplier",
+          "type": "INT",
+          "description": "Number of units between fee payments"
+        },
+        {
+          "name": "payment_frequency_unit_code",
+          "displayName": "Payment Frequency Unit Code",
+          "type": "STRING",
+          "description": "Unit between fee payments"
+        },
+        {
+          "name": "settlement_type",
+          "displayName": "Settlement Type",
+          "type": "STRING",
+          "description": "Cash, Physical or Auction"
+        }
+      ]
+    },
+    {
+      "name": "fixed_rate_step",
+      "schema": "banking.product",
+      "entity": "Swap Stream",
+      "displayName": "Fixed Rate Step",
+      "description": "A step of the fixed rate schedule of a fixed stream (FpML fixedRateSchedule).",
+      "properties": {"fpml_element": "fixedRateSchedule"},
+      "sla": {"frequency": "daily", "time": "03:00"},
+      "columns": [
+        {
+          "name": "swap_stream_id",
+          "displayName": "Swap Stream ID",
+          "type": "BIGINT",
+          "description": "The fixed stream",
+          "pk": true
+        },
+        {
+          "name": "step_start_date",
+          "displayName": "Step Start Date",
+          "type": "DATE",
+          "description": "First date the rate applies",
+          "pk": true
+        },
+        {
+          "name": "fixed_rate",
+          "displayName": "Fixed Rate",
+          "type": "DECIMAL(18,8)",
+          "description": "Fixed rate as a decimal fraction, 0.0325 = 3.25 %",
+          "notNull": true,
+          "tags": ["sensitive_financial"]
+        }
+      ]
+    },
+    {
+      "name": "floating_rate_spec",
+      "schema": "banking.product",
+      "entity": "Swap Stream",
+      "displayName": "Floating Rate Specification",
+      "description": "How the floating rate is determined: index, tenor, spread and caps/floors (FpML floatingRateCalculation).",
+      "properties": {"fpml_element": "floatingRateCalculation"},
+      "sla": {"frequency": "daily", "time": "03:00"},
+      "columns": [
+        {"name": "swap_stream_id", "displayName": "Swap Stream ID", "type": "BIGINT", "description": "The stream", "pk": true},
+        {
+          "name": "floating_rate_index_code",
+          "displayName": "Floating Rate Index Code",
+          "type": "STRING",
+          "description": "Reference index",
+          "notNull": true
+        },
+        {
+          "name": "index_tenor_multiplier",
+          "displayName": "Index Tenor Multiplier",
+          "type": "INT",
+          "description": "Number of units of the index tenor, e.g. 3"
+        },
+        {
+          "name": "index_tenor_unit_code",
+          "displayName": "Index Tenor Unit Code",
+          "type": "STRING",
+          "description": "Unit of the index tenor, e.g. M"
+        },
+        {
+          "name": "spread",
+          "displayName": "Spread",
+          "type": "DECIMAL(18,8)",
+          "description": "Spread over the index as a decimal fraction",
+          "default": "0",
+          "tags": ["sensitive_financial"]
+        },
+        {"name": "cap_rate", "displayName": "Cap Rate", "type": "DECIMAL(18,8)", "description": "Maximum rate, if any"},
+        {"name": "floor_rate", "displayName": "Floor Rate", "type": "DECIMAL(18,8)", "description": "Minimum rate, if any"},
+        {
+          "name": "initial_rate",
+          "displayName": "Initial Rate",
+          "type": "DECIMAL(18,8)",
+          "description": "Rate for the first period when already fixed"
+        }
+      ]
+    },
+    {
+      "name": "fx_exchanged_currency",
+      "schema": "banking.product",
+      "entity": "FX Leg",
+      "displayName": "FX Exchanged Currency",
+      "description": "One of the two currency amounts exchanged in an FX leg (FpML exchangedCurrency1 / exchangedCurrency2).",
+      "properties": {"fpml_element": "exchangedCurrency1"},
+      "sla": {"frequency": "daily", "time": "02:30"},
+      "columns": [
+        {"name": "product_id", "displayName": "Product ID", "type": "BIGINT", "description": "The FX leg", "pk": true},
+        {"name": "leg_number", "displayName": "Leg Number", "type": "INT", "description": "1 or 2", "pk": true},
+        {
+          "name": "payer_party_id",
+          "displayName": "Payer Party ID",
+          "type": "BIGINT",
+          "description": "Party paying this currency",
+          "notNull": true
+        },
+        {
+          "name": "receiver_party_id",
+          "displayName": "Receiver Party ID",
+          "type": "BIGINT",
+          "description": "Party receiving this currency",
+          "notNull": true
+        },
+        {
+          "name": "currency_code",
+          "displayName": "Currency Code",
+          "type": "STRING",
+          "description": "Currency exchanged",
+          "notNull": true
+        },
+        {
+          "name": "amount",
+          "displayName": "Amount",
+          "type": "DECIMAL(18,2)",
+          "description": "Amount exchanged",
+          "notNull": true,
+          "tags": ["sensitive_financial"]
+        }
+      ]
+    },
+    {
+      "name": "fx_rate",
+      "schema": "banking.product",
+      "entity": "FX Leg",
+      "displayName": "FX Rate",
+      "description": "The agreed exchange rate of an FX leg (FpML exchangeRate).",
+      "properties": {"fpml_element": "exchangeRate"},
+      "sla": {"frequency": "daily", "time": "02:30"},
+      "columns": [
+        {"name": "product_id", "displayName": "Product ID", "type": "BIGINT", "description": "The FX leg", "pk": true},
+        {
+          "name": "quote_currency1_code",
+          "displayName": "Quote Currency1 Code",
+          "type": "STRING",
+          "description": "First currency of the quoted pair",
+          "notNull": true
+        },
+        {
+          "name": "quote_currency2_code",
+          "displayName": "Quote Currency2 Code",
+          "type": "STRING",
+          "description": "Second currency of the quoted pair",
+          "notNull": true
+        },
+        {
+          "name": "quote_basis",
+          "displayName": "Quote Basis",
+          "type": "STRING",
+          "description": "Currency1PerCurrency2 or Currency2PerCurrency1",
+          "notNull": true
+        },
+        {
+          "name": "rate",
+          "displayName": "Rate",
+          "type": "DECIMAL(18,10)",
+          "description": "Agreed rate",
+          "notNull": true,
+          "tags": ["sensitive_financial"]
+        },
+        {
+          "name": "spot_rate",
+          "displayName": "Spot Rate",
+          "type": "DECIMAL(18,10)",
+          "description": "Spot rate at trade time (forwards)"
+        },
+        {
+          "name": "forward_points",
+          "displayName": "Forward Points",
+          "type": "DECIMAL(18,10)",
+          "description": "Forward points added to the spot rate"
+        }
+      ]
+    },
+    {
+      "name": "fx_single_leg",
+      "schema": "banking.product",
+      "entity": "FX Leg",
+      "displayName": "FX Single Leg",
+      "description": "A spot or forward foreign-exchange trade: one exchange of two currencies (FpML fxSingleLeg).",
+      "properties": {"fpml_element": "fxSingleLeg"},
+      "sla": {"frequency": "daily", "time": "02:00"},
+      "columns": [
+        {"name": "product_id", "displayName": "Product ID", "type": "BIGINT", "description": "Shared product key", "pk": true},
+        {
+          "name": "value_date",
+          "displayName": "Value Date",
+          "type": "DATE",
+          "description": "Date the currencies are exchanged",
+          "notNull": true
+        },
+        {
+          "name": "settlement_type",
+          "displayName": "Settlement Type",
+          "type": "STRING",
+          "description": "Physical or Cash (non-deliverable)"
+        }
+      ]
+    },
+    {
+      "name": "fx_swap",
+      "schema": "banking.product",
+      "entity": "FX Swap",
+      "displayName": "FX Swap",
+      "description": "A near and a far FX leg with opposite directions (FpML fxSwap).",
+      "properties": {"fpml_element": "fxSwap"},
+      "sla": {"frequency": "daily", "time": "02:30"},
+      "columns": [
+        {"name": "product_id", "displayName": "Product ID", "type": "BIGINT", "description": "Shared product key", "pk": true},
+        {
+          "name": "near_leg_product_id",
+          "displayName": "Near Leg Product ID",
+          "type": "BIGINT",
+          "description": "Near (first) leg",
+          "notNull": true
+        },
+        {
+          "name": "far_leg_product_id",
+          "displayName": "Far Leg Product ID",
+          "type": "BIGINT",
+          "description": "Far (second) leg",
+          "notNull": true
+        }
+      ]
+    },
+    {
+      "name": "interest_rate_swap",
+      "schema": "banking.product",
+      "entity": "Interest Rate Swap",
+      "displayName": "Interest Rate Swap",
+      "description": "An interest rate swap: two or more streams of payments (fixed, floating).",
+      "properties": {"fpml_element": "swap"},
+      "sla": {"frequency": "daily", "time": "02:00"},
+      "columns": [
+        {"name": "product_id", "displayName": "Product ID", "type": "BIGINT", "description": "Shared product key", "pk": true},
+        {
+          "name": "early_termination_provision",
+          "displayName": "Early Termination Provision",
+          "type": "BOOLEAN",
+          "description": "true when either party may terminate early",
+          "notNull": true,
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "notional_step",
+      "schema": "banking.product",
+      "entity": "Swap Stream",
+      "displayName": "Notional Step",
+      "description": "A step of the notional schedule: the notional applies from the step start date until the next step (FpML notionalStepSchedule).",
+      "properties": {"fpml_element": "notionalSchedule/notionalStepSchedule"},
+      "sla": {"frequency": "daily", "time": "03:00"},
+      "columns": [
+        {"name": "swap_stream_id", "displayName": "Swap Stream ID", "type": "BIGINT", "description": "The stream", "pk": true},
+        {
+          "name": "step_start_date",
+          "displayName": "Step Start Date",
+          "type": "DATE",
+          "description": "First date the notional applies",
+          "pk": true
+        },
+        {
+          "name": "notional_amount",
+          "displayName": "Notional Amount",
+          "type": "DECIMAL(18,2)",
+          "description": "Notional in the currency of the stream",
+          "notNull": true,
+          "tags": ["sensitive_financial"]
+        }
+      ]
+    },
+    {
+      "name": "payment_dates",
+      "schema": "banking.product",
+      "entity": "Swap Stream",
+      "displayName": "Payment Dates",
+      "description": "When and how payments of a stream fall due (FpML paymentDates).",
+      "properties": {"fpml_element": "paymentDates"},
+      "sla": {"frequency": "daily", "time": "03:00"},
+      "columns": [
+        {"name": "swap_stream_id", "displayName": "Swap Stream ID", "type": "BIGINT", "description": "The stream", "pk": true},
+        {
+          "name": "payment_frequency_multiplier",
+          "displayName": "Payment Frequency Multiplier",
+          "type": "INT",
+          "description": "Number of units between payments",
+          "notNull": true
+        },
+        {
+          "name": "payment_frequency_unit_code",
+          "displayName": "Payment Frequency Unit Code",
+          "type": "STRING",
+          "description": "Unit between payments"
+        },
+        {
+          "name": "pay_relative_to",
+          "displayName": "Pay Relative To",
+          "type": "STRING",
+          "description": "CalculationPeriodStartDate or CalculationPeriodEndDate",
+          "notNull": true
+        },
+        {
+          "name": "payment_bdc_code",
+          "displayName": "Payment BDC Code",
+          "type": "STRING",
+          "description": "Adjustment rule for payment dates"
+        },
+        {
+          "name": "payment_days_offset",
+          "displayName": "Payment Days Offset",
+          "type": "INT",
+          "description": "Business days after the reference date",
+          "default": "0"
+        }
+      ]
+    },
+    {
+      "name": "product",
+      "schema": "banking.product",
+      "entity": "Product",
+      "displayName": "Product",
+      "description": "Supertype of everything that can be traded. Each subtype table (interest_rate_swap, fx_single_leg, ...) shares this key (FpML product substitution group).",
+      "properties": {"fpml_element": "product"},
+      "sla": {"frequency": "daily", "time": "01:30"},
+      "columns": [
+        {
+          "name": "product_id",
+          "displayName": "Product ID",
+          "type": "BIGINT",
+          "description": "Surrogate key, shared with the subtype table",
+          "pk": true
+        },
+        {
+          "name": "product_type_code",
+          "displayName": "Product Type Code",
+          "type": "STRING",
+          "description": "Which subtype table describes this product",
+          "notNull": true
+        },
+        {
+          "name": "product_description",
+          "displayName": "Product Description",
+          "type": "STRING",
+          "description": "Free-text description of the product"
+        },
+        {
+          "name": "created_at",
+          "displayName": "Created At",
+          "type": "TIMESTAMP",
+          "description": "Row creation time (UTC)",
+          "notNull": true,
+          "default": "current_timestamp()"
+        },
+        {"name": "updated_at", "displayName": "Updated At", "type": "TIMESTAMP", "description": "Last update time (UTC)"}
+      ]
+    },
+    {
+      "name": "reset_dates",
+      "schema": "banking.product",
+      "entity": "Swap Stream",
+      "displayName": "Reset Dates",
+      "description": "When the floating rate is observed for each period (FpML resetDates). Only floating streams have this.",
+      "properties": {"fpml_element": "resetDates"},
+      "sla": {"frequency": "daily", "time": "03:00"},
+      "columns": [
+        {"name": "swap_stream_id", "displayName": "Swap Stream ID", "type": "BIGINT", "description": "The stream", "pk": true},
+        {
+          "name": "reset_frequency_multiplier",
+          "displayName": "Reset Frequency Multiplier",
+          "type": "INT",
+          "description": "Number of units between resets",
+          "notNull": true
+        },
+        {
+          "name": "reset_frequency_unit_code",
+          "displayName": "Reset Frequency Unit Code",
+          "type": "STRING",
+          "description": "Unit between resets"
+        },
+        {
+          "name": "reset_relative_to",
+          "displayName": "Reset Relative To",
+          "type": "STRING",
+          "description": "CalculationPeriodStartDate or CalculationPeriodEndDate",
+          "notNull": true
+        },
+        {
+          "name": "fixing_days_offset",
+          "displayName": "Fixing Days Offset",
+          "type": "INT",
+          "description": "Business days before the reset date that the rate is fixed",
+          "default": "0"
+        },
+        {
+          "name": "fixing_bdc_code",
+          "displayName": "Fixing BDC Code",
+          "type": "STRING",
+          "description": "Adjustment rule for fixing dates"
+        }
+      ]
+    },
+    {
+      "name": "stream_business_center",
+      "schema": "banking.product",
+      "displayName": "Stream Business Center",
+      "description": "Bridge table: business centers used to adjust the dates of a stream, by purpose (many-to-many).",
+      "properties": {"fpml_element": "businessCenters"},
+      "governance": {"criticality": "Medium"},
+      "sla": {"frequency": "daily", "time": "03:00"},
+      "columns": [
+        {"name": "swap_stream_id", "displayName": "Swap Stream ID", "type": "BIGINT", "description": "The stream", "pk": true},
+        {
+          "name": "business_center_code",
+          "displayName": "Business Center Code",
+          "type": "STRING",
+          "description": "The business center",
+          "pk": true
+        },
+        {
+          "name": "business_center_usage",
+          "displayName": "Business Center Usage",
+          "type": "STRING",
+          "description": "Calculation, Payment or Fixing",
+          "pk": true
+        }
+      ]
+    },
+    {
+      "name": "swap_stream",
+      "schema": "banking.product",
+      "entity": "Swap Stream",
+      "displayName": "Swap Stream",
+      "description": "One leg of a swap: who pays, the currency and how amounts accrue (FpML swapStream).",
+      "properties": {"fpml_element": "swapStream"},
+      "sla": {"frequency": "daily", "time": "02:30"},
+      "columns": [
+        {
+          "name": "swap_stream_id",
+          "displayName": "Swap Stream ID",
+          "type": "BIGINT",
+          "description": "Surrogate key",
+          "pk": true
+        },
+        {
+          "name": "product_id",
+          "displayName": "Product ID",
+          "type": "BIGINT",
+          "description": "The swap this stream belongs to",
+          "notNull": true
+        },
+        {
+          "name": "stream_number",
+          "displayName": "Stream Number",
+          "type": "INT",
+          "description": "1-based position of the stream within the swap",
+          "notNull": true
+        },
+        {
+          "name": "payer_party_id",
+          "displayName": "Payer Party ID",
+          "type": "BIGINT",
+          "description": "Party paying this stream (payerPartyReference)",
+          "notNull": true
+        },
+        {
+          "name": "receiver_party_id",
+          "displayName": "Receiver Party ID",
+          "type": "BIGINT",
+          "description": "Party receiving this stream (receiverPartyReference)",
+          "notNull": true
+        },
+        {
+          "name": "stream_kind",
+          "displayName": "Stream Kind",
+          "type": "STRING",
+          "description": "Fixed or Floating",
+          "notNull": true
+        },
+        {
+          "name": "currency_code",
+          "displayName": "Currency Code",
+          "type": "STRING",
+          "description": "Currency of the stream notional and payments",
+          "notNull": true
+        },
+        {
+          "name": "day_count_fraction_code",
+          "displayName": "Day Count Fraction Code",
+          "type": "STRING",
+          "description": "Day count fraction for accruals",
+          "notNull": true
+        },
+        {
+          "name": "compounding_method",
+          "displayName": "Compounding Method",
+          "type": "STRING",
+          "description": "None, Flat, Straight or Spread"
+        }
+      ]
+    },
+    {
+      "name": "swaption",
+      "schema": "banking.product",
+      "entity": "Swaption",
+      "displayName": "Swaption",
+      "description": "An option to enter an interest rate swap (FpML swaption).",
+      "properties": {"fpml_element": "swaption"},
+      "sla": {"frequency": "daily", "time": "02:30"},
+      "columns": [
+        {"name": "product_id", "displayName": "Product ID", "type": "BIGINT", "description": "Shared product key", "pk": true},
+        {
+          "name": "underlying_swap_product_id",
+          "displayName": "Underlying Swap Product ID",
+          "type": "BIGINT",
+          "description": "The swap that would be entered on exercise",
+          "notNull": true
+        },
+        {
+          "name": "exercise_style_code",
+          "displayName": "Exercise Style Code",
+          "type": "STRING",
+          "description": "European, American or Bermuda",
+          "notNull": true
+        },
+        {
+          "name": "expiration_date",
+          "displayName": "Expiration Date",
+          "type": "DATE",
+          "description": "Last date the option can be exercised",
+          "notNull": true
+        },
+        {
+          "name": "buyer_party_id",
+          "displayName": "Buyer Party ID",
+          "type": "BIGINT",
+          "description": "Option buyer (pays premium)",
+          "notNull": true
+        },
+        {
+          "name": "seller_party_id",
+          "displayName": "Seller Party ID",
+          "type": "BIGINT",
+          "description": "Option seller (receives premium)",
+          "notNull": true
+        },
+        {
+          "name": "premium_amount",
+          "displayName": "Premium Amount",
+          "type": "DECIMAL(18,2)",
+          "description": "Premium paid at inception",
+          "tags": ["sensitive_financial"]
+        },
+        {
+          "name": "premium_currency_code",
+          "displayName": "Premium Currency Code",
+          "type": "STRING",
+          "description": "Currency of the premium"
+        },
+        {"name": "settlement_type", "displayName": "Settlement Type", "type": "STRING", "description": "Physical or Cash"}
+      ]
+    },
+    {
+      "name": "asset_class",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Asset Class",
+      "description": "Primary asset class of a product: InterestRate, ForeignExchange, Credit, Equity, Commodity (FpML assetClass).",
+      "properties": {"fpml_element": "assetClass"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "asset_class_code",
+          "displayName": "Asset Class Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML asset_class coding scheme",
+          "pk": true
+        },
+        {
+          "name": "asset_class_name",
+          "displayName": "Asset Class Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "business_center",
+      "schema": "banking.ref",
+      "entity": "Business Center",
+      "displayName": "Business Center",
+      "description": "Financial centres whose holidays drive date adjustments, e.g. GBLO, USNY, EUTA (FpML businessCenter).",
+      "properties": {"fpml_element": "businessCenter"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "business_center_code",
+          "displayName": "Business Center Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML business_center coding scheme",
+          "pk": true
+        },
+        {
+          "name": "business_center_name",
+          "displayName": "Business Center Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "country_code", "displayName": "Country Code", "type": "STRING", "description": "Country of the centre"},
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "business_day_convention",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Business Day Convention",
+      "description": "How dates falling on a non-business day are adjusted: MODFOLLOWING, FOLLOWING, PRECEDING, NONE (FpML businessDayConvention).",
+      "properties": {"fpml_element": "businessDayConvention"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "business_day_convention_code",
+          "displayName": "Business Day Convention Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML business_day_convention coding scheme",
+          "pk": true
+        },
+        {
+          "name": "business_day_convention_name",
+          "displayName": "Business Day Convention Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "country",
+      "schema": "banking.ref",
+      "entity": "Country",
+      "displayName": "Country",
+      "description": "ISO 3166-1 alpha-2 countries (FpML countryScheme).",
+      "properties": {"fpml_element": "countryCode"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "country_code",
+          "displayName": "Country Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML country coding scheme",
+          "pk": true
+        },
+        {
+          "name": "country_name",
+          "displayName": "Country Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {
+          "name": "iso3_code",
+          "displayName": "Iso3 Code",
+          "type": "STRING",
+          "description": "ISO 3166-1 alpha-3 code",
+          "unique": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "credit_event_type",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Credit Event Type",
+      "description": "Events that trigger a credit default swap: Bankruptcy, FailureToPay, Restructuring, ... (FpML creditEvents).",
+      "properties": {"fpml_element": "creditEvents"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "credit_event_type_code",
+          "displayName": "Credit Event Type Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML credit_event_type coding scheme",
+          "pk": true
+        },
+        {
+          "name": "credit_event_type_name",
+          "displayName": "Credit Event Type Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "currency",
+      "schema": "banking.ref",
+      "entity": "Currency",
+      "displayName": "Currency",
+      "description": "ISO 4217 currency codes (FpML currencyScheme).",
+      "properties": {"fpml_element": "currency"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "currency_code",
+          "displayName": "Currency Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML currency coding scheme",
+          "pk": true
+        },
+        {
+          "name": "currency_name",
+          "displayName": "Currency Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {
+          "name": "numeric_code",
+          "displayName": "Numeric Code",
+          "type": "SMALLINT",
+          "description": "ISO 4217 numeric code",
+          "unique": true
+        },
+        {
+          "name": "minor_units",
+          "displayName": "Minor Units",
+          "type": "SMALLINT",
+          "description": "Decimal places of the minor unit"
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "day_count_fraction",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Day Count Fraction",
+      "description": "Day count conventions such as ACT/360, 30/360 and ACT/ACT.ISDA (FpML dayCountFraction).",
+      "properties": {"fpml_element": "dayCountFraction"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "day_count_fraction_code",
+          "displayName": "Day Count Fraction Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML day_count_fraction coding scheme",
+          "pk": true
+        },
+        {
+          "name": "day_count_fraction_name",
+          "displayName": "Day Count Fraction Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "exercise_style",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Exercise Style",
+      "description": "Option exercise styles: European, American, Bermuda (FpML exercise).",
+      "properties": {"fpml_element": "exercise"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "exercise_style_code",
+          "displayName": "Exercise Style Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML exercise_style coding scheme",
+          "pk": true
+        },
+        {
+          "name": "exercise_style_name",
+          "displayName": "Exercise Style Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "floating_rate_index",
+      "schema": "banking.ref",
+      "entity": "Floating Rate Index",
+      "displayName": "Floating Rate Index",
+      "description": "Reference rates for floating legs, e.g. USD-SOFR-OIS Compound, EUR-EURIBOR-Reuters (FpML floatingRateIndex).",
+      "properties": {"fpml_element": "floatingRateIndex"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "floating_rate_index_code",
+          "displayName": "Floating Rate Index Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML floating_rate_index coding scheme",
+          "pk": true
+        },
+        {
+          "name": "floating_rate_index_name",
+          "displayName": "Floating Rate Index Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "currency_code", "displayName": "Currency Code", "type": "STRING", "description": "Currency of the index"},
+        {
+          "name": "administrator",
+          "displayName": "Administrator",
+          "type": "STRING",
+          "description": "Benchmark administrator, e.g. NY Fed, EMMI"
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "id_scheme",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Identifier Scheme",
+      "description": "Identifier schemes for parties and trades: LEI, BIC, UTI, USI, InternalId (FpML partyIdScheme / tradeIdScheme).",
+      "properties": {"fpml_element": "partyIdScheme"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "id_scheme_code",
+          "displayName": "ID Scheme Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML id_scheme coding scheme",
+          "pk": true
+        },
+        {
+          "name": "id_scheme_name",
+          "displayName": "ID Scheme Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "scheme_uri", "displayName": "Scheme Uri", "type": "STRING", "description": "FpML scheme URI"},
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "master_agreement_type",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Master Agreement Type",
+      "description": "Legal framework types: ISDA, GMRA, GMSLA, CSA (FpML masterAgreementType).",
+      "properties": {"fpml_element": "masterAgreementType"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "master_agreement_type_code",
+          "displayName": "Master Agreement Type Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML master_agreement_type coding scheme",
+          "pk": true
+        },
+        {
+          "name": "master_agreement_type_name",
+          "displayName": "Master Agreement Type Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "measure_type",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Measure Type",
+      "description": "Valuation measures: NPV, CleanPrice, AccruedInterest, DV01, Delta (FpML assetMeasureType).",
+      "properties": {"fpml_element": "assetMeasureType"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "measure_type_code",
+          "displayName": "Measure Type Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML measure_type coding scheme",
+          "pk": true
+        },
+        {
+          "name": "measure_type_name",
+          "displayName": "Measure Type Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {
+          "name": "unit",
+          "displayName": "Unit",
+          "type": "STRING",
+          "description": "Unit of the measure: currency amount, rate, percent"
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "message_type",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Message Type",
+      "description": "FpML message roots: DataDocument, RequestTradeConfirmation, TradeConfirmed, TradeStatusResponse.",
+      "properties": {"fpml_element": "messageType"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "message_type_code",
+          "displayName": "Message Type Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML message_type coding scheme",
+          "pk": true
+        },
+        {
+          "name": "message_type_name",
+          "displayName": "Message Type Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {
+          "name": "fpml_root_element",
+          "displayName": "FpML Root Element",
+          "type": "STRING",
+          "description": "Root element of the XML document"
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "party_role",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Party Role",
+      "description": "Roles a party can play on a trade: Counterparty, Buyer, Seller, Broker, ClearingOrganization, ExecutionFacility, ReportingParty (FpML partyRole).",
+      "properties": {"fpml_element": "partyRole"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "party_role_code",
+          "displayName": "Party Role Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML party_role coding scheme",
+          "pk": true
+        },
+        {
+          "name": "party_role_name",
+          "displayName": "Party Role Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "party_type",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Party Type",
+      "description": "Legal-entity classification: Bank, Corporate, Fund, CCP (central counterparty), Regulator.",
+      "properties": {"fpml_element": "party"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "party_type_code",
+          "displayName": "Party Type Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML party_type coding scheme",
+          "pk": true
+        },
+        {
+          "name": "party_type_name",
+          "displayName": "Party Type Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "period_unit",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Period Unit",
+      "description": "Unit of a frequency or tenor: D (day), W (week), M (month), Y (year) (FpML period).",
+      "properties": {"fpml_element": "period"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "period_unit_code",
+          "displayName": "Period Unit Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML period coding scheme",
+          "pk": true
+        },
+        {
+          "name": "period_unit_name",
+          "displayName": "Period Unit Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "product_type",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Product Type",
+      "description": "FpML product taxonomy entries the bank trades.",
+      "properties": {"fpml_element": "productType"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "product_type_code",
+          "displayName": "Product Type Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML product_type coding scheme",
+          "pk": true
+        },
+        {
+          "name": "product_type_name",
+          "displayName": "Product Type Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {
+          "name": "asset_class_code",
+          "displayName": "Asset Class Code",
+          "type": "STRING",
+          "description": "Primary asset class",
+          "notNull": true
+        },
+        {
+          "name": "fpml_element",
+          "displayName": "FpML Element",
+          "type": "STRING",
+          "description": "FpML product element, e.g. swap, fxSingleLeg, creditDefaultSwap"
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "roll_convention",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Roll Convention",
+      "description": "Day-of-month roll rule for calculation periods: EOM, IMM, 1..31 (FpML rollConvention).",
+      "properties": {"fpml_element": "rollConvention"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "roll_convention_code",
+          "displayName": "Roll Convention Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML roll_convention coding scheme",
+          "pk": true
+        },
+        {
+          "name": "roll_convention_name",
+          "displayName": "Roll Convention Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "trade_event_type",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Trade Event Type",
+      "description": "Lifecycle events: New, Amendment, Novation, PartialTermination, FullTermination, Exercise, Cancel.",
+      "properties": {"fpml_element": "eventType"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "trade_event_type_code",
+          "displayName": "Trade Event Type Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML trade_event_type coding scheme",
+          "pk": true
+        },
+        {
+          "name": "trade_event_type_name",
+          "displayName": "Trade Event Type Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "trade_status",
+      "schema": "banking.ref",
+      "entity": "Coding Scheme",
+      "displayName": "Trade Status",
+      "description": "Workflow states of a trade: Pending, Confirmed, Active, Terminated, Cancelled.",
+      "properties": {"fpml_element": "tradeStatus"},
+      "sla": {"exclude": true},
+      "columns": [
+        {
+          "name": "trade_status_code",
+          "displayName": "Trade Status Code",
+          "type": "STRING",
+          "description": "Code as used in the FpML trade_status coding scheme",
+          "pk": true
+        },
+        {
+          "name": "trade_status_name",
+          "displayName": "Trade Status Name",
+          "type": "STRING",
+          "description": "Human readable name",
+          "notNull": true
+        },
+        {"name": "description", "displayName": "Description", "type": "STRING", "description": "Definition or usage notes"},
+        {
+          "name": "is_active",
+          "displayName": "Is Active",
+          "type": "BOOLEAN",
+          "description": "false when the code is retired",
+          "notNull": true,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "mv_daily_npv_by_book",
+      "kind": "view",
+      "viewType": "materialized",
+      "schema": "banking.reporting",
+      "displayName": "Daily NPV by Book",
+      "description": "Sum of NPV per valuation date, book and currency. Refreshed after each valuation run; feeds the risk dashboard.",
+      "tags": ["sensitive_financial", "valuation"],
+      "sla": {"frequency": "daily", "time": "06:00"},
+      "definition": "SELECT vs.valuation_date, b.book_name, vm.currency_code, COUNT(DISTINCT vs.trade_id) AS trade_count, SUM(vm.amount) AS total_npv\nFROM banking.valuation.valuation_set vs\nJOIN banking.valuation.valuation_measure vm ON vm.valuation_set_id = vs.valuation_set_id AND vm.measure_type_code = 'NPV'\nJOIN banking.trade.trade t ON t.trade_id = vs.trade_id\nJOIN banking.party.book b ON b.book_id = t.book_id\nGROUP BY vs.valuation_date, b.book_name, vm.currency_code",
+      "columns": [
+        {"name": "valuation_date", "displayName": "Valuation Date", "type": "DATE"},
+        {"name": "book_name", "displayName": "Book Name", "type": "STRING"},
+        {"name": "currency_code", "displayName": "Currency Code", "type": "STRING"},
+        {"name": "trade_count", "displayName": "Trade Count", "type": "BIGINT"},
+        {
+          "name": "total_npv",
+          "displayName": "Total NPV",
+          "type": "DECIMAL(28,8)",
+          "tags": ["sensitive_financial", "valuation"]
+        }
+      ]
+    },
+    {
+      "name": "mv_trade_events_daily",
+      "kind": "view",
+      "viewType": "materialized",
+      "schema": "banking.reporting",
+      "displayName": "Trade Events per Day",
+      "description": "Count of lifecycle events per business date and event type, for operations monitoring.",
+      "governance": {"criticality": "Medium"},
+      "sla": {"frequency": "daily", "time": "05:00"},
+      "definition": "SELECT e.event_date, et.trade_event_type_name AS event_type, COUNT(*) AS event_count\nFROM banking.trade.trade_event e\nJOIN banking.ref.trade_event_type et ON et.trade_event_type_code = e.trade_event_type_code\nGROUP BY e.event_date, et.trade_event_type_name",
+      "columns": [
+        {"name": "event_date", "displayName": "Event Date", "type": "DATE"},
+        {"name": "event_type", "displayName": "Event Type", "type": "STRING"},
+        {"name": "event_count", "displayName": "Event Count", "type": "BIGINT"}
+      ]
+    },
+    {
+      "name": "v_active_trades_by_counterparty",
+      "kind": "view",
+      "schema": "banking.reporting",
+      "displayName": "Active Trades by Counterparty",
+      "description": "Number of active trades per counterparty and asset class: a quick exposure overview.",
+      "definition": "SELECT p.party_id, p.party_name, pt.asset_class_code, COUNT(DISTINCT t.trade_id) AS active_trade_count\nFROM banking.trade.trade t\nJOIN banking.trade.trade_party_role r ON r.trade_id = t.trade_id AND r.party_role_code = 'Counterparty'\nJOIN banking.party.party p ON p.party_id = r.party_id AND p.is_internal = false\nJOIN banking.product.product pr ON pr.product_id = t.product_id\nJOIN banking.ref.product_type pt ON pt.product_type_code = pr.product_type_code\nWHERE t.trade_status_code = 'Active'\nGROUP BY p.party_id, p.party_name, pt.asset_class_code",
+      "columns": [
+        {"name": "party_id", "displayName": "Party ID", "type": "BIGINT"},
+        {"name": "party_name", "displayName": "Party Name", "type": "STRING"},
+        {"name": "asset_class_code", "displayName": "Asset Class Code", "type": "STRING"},
+        {"name": "active_trade_count", "displayName": "Active Trade Count", "type": "BIGINT"}
+      ]
+    },
+    {
+      "name": "v_irs_stream_schedule",
+      "kind": "view",
+      "schema": "banking.reporting",
+      "displayName": "IRS Stream Schedule",
+      "description": "Interest rate swap streams with payer, receiver, dates, index/spread, latest fixed rate and initial notional.",
+      "tags": ["sensitive_financial"],
+      "definition": "SELECT t.trade_id, s.swap_stream_id, s.stream_number, s.stream_kind,\n       payer.party_name AS payer, receiver.party_name AS receiver, s.currency_code, s.day_count_fraction_code,\n       cpd.effective_date, cpd.termination_date, cpd.period_multiplier, cpd.period_unit_code,\n       f.floating_rate_index_code, f.spread,\n       (SELECT MAX_BY(fr.fixed_rate, fr.step_start_date) FROM banking.product.fixed_rate_step fr WHERE fr.swap_stream_id = s.swap_stream_id) AS fixed_rate,\n       (SELECT MIN_BY(n.notional_amount, n.step_start_date) FROM banking.product.notional_step n WHERE n.swap_stream_id = s.swap_stream_id) AS initial_notional\nFROM banking.trade.trade t\nJOIN banking.product.interest_rate_swap irs ON irs.product_id = t.product_id\nJOIN banking.product.swap_stream s ON s.product_id = irs.product_id\nJOIN banking.party.party payer ON payer.party_id = s.payer_party_id\nJOIN banking.party.party receiver ON receiver.party_id = s.receiver_party_id\nJOIN banking.product.calculation_period_dates cpd ON cpd.swap_stream_id = s.swap_stream_id\nLEFT JOIN banking.product.floating_rate_spec f ON f.swap_stream_id = s.swap_stream_id",
+      "columns": [
+        {"name": "trade_id", "displayName": "Trade ID", "type": "BIGINT"},
+        {"name": "swap_stream_id", "displayName": "Swap Stream ID", "type": "BIGINT"},
+        {"name": "stream_number", "displayName": "Stream Number", "type": "INT"},
+        {"name": "stream_kind", "displayName": "Stream Kind", "type": "STRING"},
+        {"name": "payer", "displayName": "Payer", "type": "STRING"},
+        {"name": "receiver", "displayName": "Receiver", "type": "STRING"},
+        {"name": "currency_code", "displayName": "Currency Code", "type": "STRING"},
+        {"name": "day_count_fraction_code", "displayName": "Day Count Fraction Code", "type": "STRING"},
+        {"name": "effective_date", "displayName": "Effective Date", "type": "DATE"},
+        {"name": "termination_date", "displayName": "Termination Date", "type": "DATE"},
+        {"name": "period_multiplier", "displayName": "Period Multiplier", "type": "INT"},
+        {"name": "period_unit_code", "displayName": "Period Unit Code", "type": "STRING"},
+        {"name": "floating_rate_index_code", "displayName": "Floating Rate Index Code", "type": "STRING"},
+        {"name": "spread", "displayName": "Spread", "type": "DECIMAL(18,8)", "tags": ["sensitive_financial"]},
+        {
+          "name": "fixed_rate",
+          "displayName": "Fixed Rate",
+          "type": "DECIMAL(18,8)",
+          "description": "Rate of the latest fixed-rate step",
+          "tags": ["sensitive_financial"]
+        },
+        {
+          "name": "initial_notional",
+          "displayName": "Initial Notional",
+          "type": "DECIMAL(18,2)",
+          "description": "Notional of the earliest notional step",
+          "tags": ["sensitive_financial"]
+        }
+      ]
+    },
+    {
+      "name": "v_party_directory",
+      "kind": "view",
+      "schema": "banking.reporting",
+      "displayName": "Party Directory",
+      "description": "Parties with type, country, LEI, BIC and ultimate parent for client and counterparty lookups.",
+      "tags": ["kyc"],
+      "definition": "SELECT p.party_id, p.party_name, pt.party_type_name AS party_type, c.country_name, lei.identifier_value AS lei, bic.identifier_value AS bic,\n       parent.party_name AS ultimate_parent_name, p.is_internal\nFROM banking.party.party p\nJOIN banking.ref.party_type pt ON pt.party_type_code = p.party_type_code\nLEFT JOIN banking.ref.country c ON c.country_code = p.country_code\nLEFT JOIN banking.party.party_identifier lei ON lei.party_id = p.party_id AND lei.id_scheme_code = 'LEI'\nLEFT JOIN banking.party.party_identifier bic ON bic.party_id = p.party_id AND bic.id_scheme_code = 'BIC'\nLEFT JOIN banking.party.party_relationship rel ON rel.party_id = p.party_id AND rel.relationship_type = 'UltimateParent'\nLEFT JOIN banking.party.party parent ON parent.party_id = rel.related_party_id",
+      "columns": [
+        {"name": "party_id", "displayName": "Party ID", "type": "BIGINT"},
+        {"name": "party_name", "displayName": "Party Name", "type": "STRING"},
+        {"name": "party_type", "displayName": "Party Type", "type": "STRING"},
+        {"name": "country_name", "displayName": "Country Name", "type": "STRING"},
+        {"name": "lei", "displayName": "LEI", "type": "STRING", "tags": ["kyc"]},
+        {"name": "bic", "displayName": "BIC", "type": "STRING", "tags": ["kyc"]},
+        {"name": "ultimate_parent_name", "displayName": "Ultimate Parent Name", "type": "STRING"},
+        {"name": "is_internal", "displayName": "Is Internal", "type": "BOOLEAN"}
+      ]
+    },
+    {
+      "name": "v_person_directory_masked",
+      "kind": "view",
+      "schema": "banking.reporting",
+      "entity": "Person",
+      "displayName": "Person Directory (Masked)",
+      "description": "Persons without direct personal data: last name reduced to an initial and e-mail masked. Safe for wide access.",
+      "tags": ["confidential", "-pii"],
+      "governance": {"policies": ["Mask Personal Data"]},
+      "definition": "SELECT person_id, party_id, first_name, LEFT(last_name, 1) AS last_initial, job_title, is_trader, MASK(email) AS masked_email\nFROM banking.party.person",
+      "columns": [
+        {"name": "person_id", "displayName": "Person ID", "type": "BIGINT"},
+        {"name": "party_id", "displayName": "Party ID", "type": "BIGINT"},
+        {"name": "first_name", "displayName": "First Name", "type": "STRING", "tags": ["pii"]},
+        {"name": "last_initial", "displayName": "Last Initial", "type": "STRING"},
+        {"name": "job_title", "displayName": "Job Title", "type": "STRING"},
+        {"name": "is_trader", "displayName": "Is Trader", "type": "BOOLEAN"},
+        {"name": "masked_email", "displayName": "Masked Email", "type": "STRING", "description": "E-mail masked with MASK()"}
+      ]
+    },
+    {
+      "name": "v_trade_counterparties",
+      "kind": "view",
+      "schema": "banking.reporting",
+      "displayName": "Trade Counterparties",
+      "description": "The parties on each trade with their role, LEI and account.",
+      "tags": ["kyc"],
+      "definition": "SELECT r.trade_id, pr.party_role_name AS party_role, p.party_id, p.party_name, lei.identifier_value AS lei, a.account_name\nFROM banking.trade.trade_party_role r\nJOIN banking.ref.party_role pr ON pr.party_role_code = r.party_role_code\nJOIN banking.party.party p ON p.party_id = r.party_id\nLEFT JOIN banking.party.party_identifier lei ON lei.party_id = p.party_id AND lei.id_scheme_code = 'LEI'\nLEFT JOIN banking.party.account a ON a.account_id = r.account_id",
+      "columns": [
+        {"name": "trade_id", "displayName": "Trade ID", "type": "BIGINT"},
+        {"name": "party_role", "displayName": "Party Role", "type": "STRING"},
+        {"name": "party_id", "displayName": "Party ID", "type": "BIGINT"},
+        {"name": "party_name", "displayName": "Party Name", "type": "STRING"},
+        {"name": "lei", "displayName": "LEI", "type": "STRING", "description": "Legal Entity Identifier", "tags": ["kyc"]},
+        {"name": "account_name", "displayName": "Account Name", "type": "STRING"}
+      ]
+    },
+    {
+      "name": "v_trade_summary",
+      "kind": "view",
+      "schema": "banking.reporting",
+      "displayName": "Trade Summary",
+      "description": "One row per trade with status, product, asset class, book and UTI: the starting point for most trade reports.",
+      "tags": ["regulatory_reporting"],
+      "definition": "SELECT t.trade_id, t.trade_date, ts.trade_status_name AS trade_status, pt.product_type_name AS product_type, pt.asset_class_code,\n       b.book_name, uti.identifier_value AS uti\nFROM banking.trade.trade t\nJOIN banking.ref.trade_status ts ON ts.trade_status_code = t.trade_status_code\nJOIN banking.product.product p ON p.product_id = t.product_id\nJOIN banking.ref.product_type pt ON pt.product_type_code = p.product_type_code\nJOIN banking.party.book b ON b.book_id = t.book_id\nLEFT JOIN banking.trade.trade_identifier uti ON uti.trade_id = t.trade_id AND uti.id_scheme_code = 'UTI'",
+      "columns": [
+        {"name": "trade_id", "displayName": "Trade ID", "type": "BIGINT"},
+        {"name": "trade_date", "displayName": "Trade Date", "type": "DATE"},
+        {"name": "trade_status", "displayName": "Trade Status", "type": "STRING"},
+        {"name": "product_type", "displayName": "Product Type", "type": "STRING"},
+        {"name": "asset_class_code", "displayName": "Asset Class Code", "type": "STRING"},
+        {"name": "book_name", "displayName": "Book Name", "type": "STRING"},
+        {
+          "name": "uti",
+          "displayName": "UTI",
+          "type": "STRING",
+          "description": "Unique Trade Identifier (regulatory)",
+          "tags": ["regulatory_reporting"]
+        }
+      ]
+    },
+    {
+      "name": "trade",
+      "schema": "banking.trade",
+      "entity": "Trade",
+      "displayName": "Trade",
+      "description": "The trade header: one executed deal in one product, booked into a book and possibly under a master agreement (FpML trade / tradeHeader).",
+      "tags": ["regulatory_reporting"],
+      "properties": {"fpml_element": "trade"},
+      "sla": {"frequency": "daily", "time": "03:00"},
+      "columns": [
+        {"name": "trade_id", "displayName": "Trade ID", "type": "BIGINT", "description": "Surrogate key", "pk": true},
+        {
+          "name": "product_id",
+          "displayName": "Product ID",
+          "type": "BIGINT",
+          "description": "Product traded",
+          "notNull": true,
+          "unique": true
+        },
+        {
+          "name": "trade_date",
+          "displayName": "Trade Date",
+          "type": "DATE",
+          "description": "Date the trade was agreed (tradeDate)",
+          "notNull": true
+        },
+        {
+          "name": "execution_timestamp",
+          "displayName": "Execution Timestamp",
+          "type": "TIMESTAMP",
+          "description": "Precise execution time (UTC)"
+        },
+        {
+          "name": "trade_status_code",
+          "displayName": "Trade Status Code",
+          "type": "STRING",
+          "description": "Current workflow status",
+          "notNull": true
+        },
+        {
+          "name": "master_agreement_id",
+          "displayName": "Master Agreement ID",
+          "type": "BIGINT",
+          "description": "Governing master agreement"
+        },
+        {
+          "name": "book_id",
+          "displayName": "Book ID",
+          "type": "BIGINT",
+          "description": "Book the trade is booked into",
+          "notNull": true
+        },
+        {
+          "name": "execution_venue_party_id",
+          "displayName": "Execution Venue Party ID",
+          "type": "BIGINT",
+          "description": "Venue or platform where the trade was executed"
+        },
+        {
+          "name": "origin_system",
+          "displayName": "Origin System",
+          "type": "STRING",
+          "description": "Front-office system that created the trade"
+        },
+        {
+          "name": "version_number",
+          "displayName": "Version Number",
+          "type": "INT",
+          "description": "Increases with every amendment",
+          "notNull": true,
+          "default": "1"
+        },
+        {
+          "name": "created_at",
+          "displayName": "Created At",
+          "type": "TIMESTAMP",
+          "description": "Row creation time (UTC)",
+          "notNull": true,
+          "default": "current_timestamp()"
+        },
+        {"name": "updated_at", "displayName": "Updated At", "type": "TIMESTAMP", "description": "Last update time (UTC)"}
+      ]
+    },
+    {
+      "name": "trade_event",
+      "schema": "banking.trade",
+      "entity": "Trade Event",
+      "displayName": "Trade Event",
+      "description": "A lifecycle event of a trade: new, amendment, novation, termination (FpML event / eventType). Events chain through previous_trade_event_id.",
+      "properties": {"fpml_element": "event"},
+      "sla": {"frequency": "daily", "time": "03:30"},
+      "columns": [
+        {
+          "name": "trade_event_id",
+          "displayName": "Trade Event ID",
+          "type": "BIGINT",
+          "description": "Surrogate key",
+          "pk": true
+        },
+        {"name": "trade_id", "displayName": "Trade ID", "type": "BIGINT", "description": "Affected trade", "notNull": true},
+        {
+          "name": "trade_event_type_code",
+          "displayName": "Trade Event Type Code",
+          "type": "STRING",
+          "description": "Type of event",
+          "notNull": true
+        },
+        {
+          "name": "event_date",
+          "displayName": "Event Date",
+          "type": "DATE",
+          "description": "Business date of the event",
+          "notNull": true
+        },
+        {
+          "name": "effective_date",
+          "displayName": "Effective Date",
+          "type": "DATE",
+          "description": "Date the change takes effect"
+        },
+        {
+          "name": "event_timestamp",
+          "displayName": "Event Timestamp",
+          "type": "TIMESTAMP",
+          "description": "When the event was recorded (UTC)"
+        },
+        {
+          "name": "initiated_by_party_id",
+          "displayName": "Initiated By Party ID",
+          "type": "BIGINT",
+          "description": "Party that initiated the event"
+        },
+        {"name": "reason", "displayName": "Reason", "type": "STRING", "description": "Reason or free-text comment"},
+        {
+          "name": "previous_trade_event_id",
+          "displayName": "Previous Trade Event ID",
+          "type": "BIGINT",
+          "description": "Preceding event in the trade's history"
+        },
+        {
+          "name": "message_id",
+          "displayName": "Message ID",
+          "type": "BIGINT",
+          "description": "FpML message that triggered the event"
+        }
+      ]
+    },
+    {
+      "name": "trade_identifier",
+      "schema": "banking.trade",
+      "entity": "Trade",
+      "displayName": "Trade Identifier",
+      "description": "Identifiers of a trade issued by a party or regulator: internal ids, UTI, USI (FpML partyTradeIdentifier).",
+      "tags": ["regulatory_reporting"],
+      "properties": {"fpml_element": "tradeHeader/partyTradeIdentifier"},
+      "sla": {"frequency": "daily", "time": "03:30"},
+      "columns": [
+        {"name": "trade_id", "displayName": "Trade ID", "type": "BIGINT", "description": "The trade", "pk": true},
+        {
+          "name": "id_scheme_code",
+          "displayName": "ID Scheme Code",
+          "type": "STRING",
+          "description": "Identifier scheme, e.g. UTI",
+          "pk": true
+        },
+        {
+          "name": "issuer_party_id",
+          "displayName": "Issuer Party ID",
+          "type": "BIGINT",
+          "description": "Party that issued the identifier",
+          "pk": true
+        },
+        {
+          "name": "identifier_value",
+          "displayName": "Identifier Value",
+          "type": "STRING",
+          "description": "The identifier",
+          "notNull": true,
+          "tags": ["regulatory_reporting"]
+        }
+      ]
+    },
+    {
+      "name": "trade_novation",
+      "schema": "banking.trade",
+      "entity": "Trade Event",
+      "displayName": "Trade Novation",
+      "description": "Details of a novation event: the transferor leaves the trade and the transferee takes its place (FpML novation).",
+      "properties": {"fpml_element": "novation"},
+      "sla": {"frequency": "daily", "time": "03:30"},
+      "columns": [
+        {
+          "name": "trade_event_id",
+          "displayName": "Trade Event ID",
+          "type": "BIGINT",
+          "description": "The novation event",
+          "pk": true
+        },
+        {
+          "name": "transferor_party_id",
+          "displayName": "Transferor Party ID",
+          "type": "BIGINT",
+          "description": "Party leaving the trade",
+          "notNull": true
+        },
+        {
+          "name": "transferee_party_id",
+          "displayName": "Transferee Party ID",
+          "type": "BIGINT",
+          "description": "Party entering the trade",
+          "notNull": true
+        },
+        {
+          "name": "remaining_party_id",
+          "displayName": "Remaining Party ID",
+          "type": "BIGINT",
+          "description": "Party staying in the trade",
+          "notNull": true
+        },
+        {
+          "name": "novation_date",
+          "displayName": "Novation Date",
+          "type": "DATE",
+          "description": "Date the novation takes effect",
+          "notNull": true
+        },
+        {
+          "name": "novated_amount",
+          "displayName": "Novated Amount",
+          "type": "DECIMAL(18,2)",
+          "description": "Notional novated; null means the full amount",
+          "tags": ["sensitive_financial"]
+        }
+      ]
+    },
+    {
+      "name": "trade_party_role",
+      "schema": "banking.trade",
+      "displayName": "Trade Party Role",
+      "description": "Which party plays which role on a trade, optionally through an account (FpML relatedParty / partyTradeInformation).",
+      "properties": {"fpml_element": "partyTradeInformation"},
+      "sla": {"frequency": "daily", "time": "03:30"},
+      "columns": [
+        {"name": "trade_id", "displayName": "Trade ID", "type": "BIGINT", "description": "The trade", "pk": true},
+        {"name": "party_id", "displayName": "Party ID", "type": "BIGINT", "description": "The party", "pk": true},
+        {
+          "name": "party_role_code",
+          "displayName": "Party Role Code",
+          "type": "STRING",
+          "description": "The role, e.g. Counterparty",
+          "pk": true
+        },
+        {
+          "name": "account_id",
+          "displayName": "Account ID",
+          "type": "BIGINT",
+          "description": "Account used for this party on this trade"
+        }
+      ]
+    },
+    {
+      "name": "valuation_measure",
+      "schema": "banking.valuation",
+      "entity": "Valuation Measure",
+      "displayName": "Valuation Measure",
+      "description": "One measure (NPV, DV01, accrued interest) of a valuation set in a currency (FpML assetValuation / quote). Bridge between valuation sets and measure types.",
+      "tags": ["valuation"],
+      "properties": {"fpml_element": "quote"},
+      "sla": {"frequency": "daily", "time": "04:30"},
+      "columns": [
+        {
+          "name": "valuation_set_id",
+          "displayName": "Valuation Set ID",
+          "type": "BIGINT",
+          "description": "The valuation set",
+          "pk": true
+        },
+        {
+          "name": "measure_type_code",
+          "displayName": "Measure Type Code",
+          "type": "STRING",
+          "description": "Which measure",
+          "pk": true
+        },
+        {"name": "currency_code", "displayName": "Currency Code", "type": "STRING", "description": "Currency of the amount"},
+        {
+          "name": "amount",
+          "displayName": "Amount",
+          "type": "DECIMAL(28,8)",
+          "description": "Value of the measure",
+          "notNull": true,
+          "tags": ["sensitive_financial", "valuation"]
+        }
+      ]
+    },
+    {
+      "name": "valuation_set",
+      "schema": "banking.valuation",
+      "entity": "Valuation",
+      "displayName": "Valuation Set",
+      "description": "A valuation run for a trade on a date: the container of measures such as NPV (FpML valuationSet).",
+      "tags": ["valuation"],
+      "properties": {"fpml_element": "valuationSet"},
+      "sla": {"frequency": "daily", "time": "04:00"},
+      "columns": [
+        {
+          "name": "valuation_set_id",
+          "displayName": "Valuation Set ID",
+          "type": "BIGINT",
+          "description": "Surrogate key",
+          "pk": true
+        },
+        {"name": "trade_id", "displayName": "Trade ID", "type": "BIGINT", "description": "Valued trade", "notNull": true},
+        {
+          "name": "valuation_date",
+          "displayName": "Valuation Date",
+          "type": "DATE",
+          "description": "Valuation date",
+          "notNull": true
+        },
+        {
+          "name": "valuation_timestamp",
+          "displayName": "Valuation Timestamp",
+          "type": "TIMESTAMP",
+          "description": "Time the valuation was calculated (UTC)"
+        },
+        {
+          "name": "valuation_source",
+          "displayName": "Valuation Source",
+          "type": "STRING",
+          "description": "Pricing library or system"
+        },
+        {"name": "scenario", "displayName": "Scenario", "type": "STRING", "description": "Market scenario, e.g. Base, Stress"}
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "parent": "banking.messaging.fpml_message.message_id",
+      "child": "banking.messaging.fpml_message.in_reply_to_message_id",
+      "cardinality": "1..M",
+      "name": "is answered by",
+      "description": "A message can be answered by other messages."
+    },
+    {
+      "parent": "banking.messaging.fpml_message.message_id",
+      "child": "banking.messaging.message_recipient.message_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.messaging.fpml_message.message_id",
+      "child": "banking.messaging.message_trade.message_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.messaging.fpml_message.message_id",
+      "child": "banking.trade.trade_event.message_id",
+      "cardinality": "1..M",
+      "name": "triggers",
+      "description": "A message can trigger many events."
+    },
+    {
+      "parent": "banking.messaging.fpml_message",
+      "child": "banking.party.party",
+      "cardinality": "M..M",
+      "name": "is routed to",
+      "description": "A message is routed to several recipients by role (sendTo, copyTo).",
+      "via": "banking.messaging.message_recipient"
+    },
+    {
+      "parent": "banking.messaging.fpml_message",
+      "child": "banking.trade.trade",
+      "cardinality": "M..M",
+      "name": "carries",
+      "description": "A message carries one or more trades; a trade appears in many messages over its life.",
+      "via": "banking.messaging.message_trade"
+    },
+    {
+      "parent": "banking.party.account.account_id",
+      "child": "banking.trade.trade_party_role.account_id",
+      "cardinality": "1..M",
+      "name": "is used by",
+      "description": "An account is used on many trade roles."
+    },
+    {
+      "parent": "banking.party.book.book_id",
+      "child": "banking.trade.trade.book_id",
+      "cardinality": "1..M",
+      "name": "holds",
+      "description": "A book holds many trades."
+    },
+    {
+      "parent": "banking.party.master_agreement.master_agreement_id",
+      "child": "banking.party.master_agreement_party.master_agreement_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.party.master_agreement.master_agreement_id",
+      "child": "banking.trade.trade.master_agreement_id",
+      "cardinality": "1..M",
+      "name": "governs",
+      "description": "A master agreement governs many trades."
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.messaging.fpml_message.sent_by_party_id",
+      "cardinality": "1..M",
+      "name": "sends",
+      "description": "A party sends many messages."
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.messaging.message_recipient.party_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.party.account.party_id",
+      "cardinality": "1..M",
+      "name": "owns",
+      "description": "A party owns many accounts."
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.party.book.legal_entity_party_id",
+      "cardinality": "1..M",
+      "name": "books trades for",
+      "description": "A legal entity owns many books."
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.party.master_agreement_party.party_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.party.party_identifier.party_id",
+      "cardinality": "1..M",
+      "name": "is identified by",
+      "description": "A party has several identifiers."
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.party.party_relationship.party_id",
+      "cardinality": "1..M",
+      "name": "is related as child",
+      "description": "A party can be the child in many relationships."
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.party.party_relationship.related_party_id",
+      "cardinality": "1..M",
+      "name": "is related as parent",
+      "description": "A party can be the parent in many relationships."
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.party.person.party_id",
+      "cardinality": "1..M",
+      "name": "employs",
+      "description": "A party employs many persons."
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.product.cds_reference_obligation.primary_obligor_party_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.product.credit_default_swap.protection_buyer_party_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.product.credit_default_swap.protection_seller_party_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.product.credit_default_swap.reference_entity_party_id",
+      "cardinality": "1..M",
+      "name": "is referenced by",
+      "description": "A party is the reference entity of many CDS."
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.product.fx_exchanged_currency.payer_party_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.product.fx_exchanged_currency.receiver_party_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.product.swap_stream.payer_party_id",
+      "cardinality": "1..M",
+      "name": "pays",
+      "description": "A party pays many streams."
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.product.swap_stream.receiver_party_id",
+      "cardinality": "1..M",
+      "name": "receives",
+      "description": "A party receives many streams."
+    },
+    {"parent": "banking.party.party.party_id", "child": "banking.product.swaption.buyer_party_id", "cardinality": "1..M"},
+    {"parent": "banking.party.party.party_id", "child": "banking.product.swaption.seller_party_id", "cardinality": "1..M"},
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.trade.trade_event.initiated_by_party_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.trade.trade_identifier.issuer_party_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.trade.trade_novation.remaining_party_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.trade.trade_novation.transferee_party_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.trade.trade_novation.transferor_party_id",
+      "cardinality": "1..M"
+    },
+    {"parent": "banking.party.party.party_id", "child": "banking.trade.trade_party_role.party_id", "cardinality": "1..M"},
+    {
+      "parent": "banking.party.party.party_id",
+      "child": "banking.trade.trade.execution_venue_party_id",
+      "cardinality": "1..M",
+      "name": "executes",
+      "description": "A venue executes many trades."
+    },
+    {
+      "parent": "banking.party.party",
+      "child": "banking.party.master_agreement",
+      "cardinality": "M..M",
+      "name": "is party to",
+      "description": "A party can be party to many master agreements and an agreement has (at least) two parties.",
+      "via": "banking.party.master_agreement_party"
+    },
+    {
+      "parent": "banking.product.credit_default_swap.product_id",
+      "child": "banking.product.cds_credit_event.product_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.product.credit_default_swap.product_id",
+      "child": "banking.product.cds_reference_obligation.product_id",
+      "cardinality": "1..M",
+      "name": "references",
+      "description": "A CDS references one or more obligations."
+    },
+    {
+      "parent": "banking.product.credit_default_swap",
+      "child": "banking.ref.credit_event_type",
+      "cardinality": "M..M",
+      "name": "protects against",
+      "description": "A CDS protects against several credit event types; an event type applies to many CDS.",
+      "via": "banking.product.cds_credit_event"
+    },
+    {
+      "parent": "banking.product.fx_single_leg.product_id",
+      "child": "banking.product.fx_exchanged_currency.product_id",
+      "cardinality": "1..M",
+      "name": "exchanges",
+      "description": "An FX leg exchanges two currency amounts."
+    },
+    {
+      "parent": "banking.product.fx_single_leg.product_id",
+      "child": "banking.product.fx_rate.product_id",
+      "cardinality": "1..1",
+      "name": "is priced at",
+      "description": "Each FX leg has exactly one agreed rate."
+    },
+    {
+      "parent": "banking.product.fx_single_leg.product_id",
+      "child": "banking.product.fx_swap.far_leg_product_id",
+      "cardinality": "1..M",
+      "name": "is far leg of",
+      "description": "An FX leg can be the far leg of a swap."
+    },
+    {
+      "parent": "banking.product.fx_single_leg.product_id",
+      "child": "banking.product.fx_swap.near_leg_product_id",
+      "cardinality": "1..M",
+      "name": "is near leg of",
+      "description": "An FX leg can be the near leg of a swap."
+    },
+    {
+      "parent": "banking.product.interest_rate_swap.product_id",
+      "child": "banking.product.swap_stream.product_id",
+      "cardinality": "1..M",
+      "name": "has streams",
+      "description": "A swap has two or more streams."
+    },
+    {
+      "parent": "banking.product.interest_rate_swap.product_id",
+      "child": "banking.product.swaption.underlying_swap_product_id",
+      "cardinality": "1..M",
+      "name": "underlies",
+      "description": "A swap can underlie swaptions."
+    },
+    {
+      "parent": "banking.product.product.product_id",
+      "child": "banking.product.credit_default_swap.product_id",
+      "cardinality": "1..1",
+      "name": "is specialised as",
+      "description": "Each product is described by exactly one subtype row."
+    },
+    {
+      "parent": "banking.product.product.product_id",
+      "child": "banking.product.fx_single_leg.product_id",
+      "cardinality": "1..1",
+      "name": "is specialised as",
+      "description": "Each product is described by exactly one subtype row."
+    },
+    {
+      "parent": "banking.product.product.product_id",
+      "child": "banking.product.fx_swap.product_id",
+      "cardinality": "1..1",
+      "name": "is specialised as",
+      "description": "Each product is described by exactly one subtype row."
+    },
+    {
+      "parent": "banking.product.product.product_id",
+      "child": "banking.product.interest_rate_swap.product_id",
+      "cardinality": "1..1",
+      "name": "is specialised as",
+      "description": "Each product is described by exactly one subtype row."
+    },
+    {
+      "parent": "banking.product.product.product_id",
+      "child": "banking.product.swaption.product_id",
+      "cardinality": "1..1",
+      "name": "is specialised as",
+      "description": "Each product is described by exactly one subtype row."
+    },
+    {
+      "parent": "banking.product.product.product_id",
+      "child": "banking.trade.trade.product_id",
+      "cardinality": "1..1",
+      "name": "is traded as",
+      "description": "Each product is traded in exactly one trade."
+    },
+    {
+      "parent": "banking.product.swap_stream.swap_stream_id",
+      "child": "banking.product.calculation_period_dates.swap_stream_id",
+      "cardinality": "1..1",
+      "name": "is detailed by",
+      "description": "Each stream has exactly one row here."
+    },
+    {
+      "parent": "banking.product.swap_stream.swap_stream_id",
+      "child": "banking.product.fixed_rate_step.swap_stream_id",
+      "cardinality": "1..M",
+      "name": "has fixed rate steps",
+      "description": "A fixed stream has one or more rate steps."
+    },
+    {
+      "parent": "banking.product.swap_stream.swap_stream_id",
+      "child": "banking.product.floating_rate_spec.swap_stream_id",
+      "cardinality": "1..1",
+      "name": "is detailed by",
+      "description": "Each stream has exactly one row here."
+    },
+    {
+      "parent": "banking.product.swap_stream.swap_stream_id",
+      "child": "banking.product.notional_step.swap_stream_id",
+      "cardinality": "1..M",
+      "name": "has notional steps",
+      "description": "A stream has one or more notional steps."
+    },
+    {
+      "parent": "banking.product.swap_stream.swap_stream_id",
+      "child": "banking.product.payment_dates.swap_stream_id",
+      "cardinality": "1..1",
+      "name": "is detailed by",
+      "description": "Each stream has exactly one row here."
+    },
+    {
+      "parent": "banking.product.swap_stream.swap_stream_id",
+      "child": "banking.product.reset_dates.swap_stream_id",
+      "cardinality": "1..1",
+      "name": "is detailed by",
+      "description": "Each stream has exactly one row here."
+    },
+    {
+      "parent": "banking.product.swap_stream.swap_stream_id",
+      "child": "banking.product.stream_business_center.swap_stream_id",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.product.swap_stream",
+      "child": "banking.ref.business_center",
+      "cardinality": "M..M",
+      "name": "uses calendars of",
+      "description": "A stream adjusts its dates using several business centers, each for a purpose (calculation, payment, fixing).",
+      "via": "banking.product.stream_business_center"
+    },
+    {
+      "parent": "banking.ref.asset_class.asset_class_code",
+      "child": "banking.ref.product_type.asset_class_code",
+      "cardinality": "1..M",
+      "name": "classifies",
+      "description": "An asset class classifies many product types."
+    },
+    {
+      "parent": "banking.ref.business_center.business_center_code",
+      "child": "banking.market.holiday_calendar.business_center_code",
+      "cardinality": "1..M",
+      "name": "observes",
+      "description": "A business center observes many holidays."
+    },
+    {
+      "parent": "banking.ref.business_center.business_center_code",
+      "child": "banking.product.stream_business_center.business_center_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.business_day_convention.business_day_convention_code",
+      "child": "banking.product.calculation_period_dates.calculation_period_bdc_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.business_day_convention.business_day_convention_code",
+      "child": "banking.product.calculation_period_dates.effective_date_bdc_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.business_day_convention.business_day_convention_code",
+      "child": "banking.product.calculation_period_dates.termination_date_bdc_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.business_day_convention.business_day_convention_code",
+      "child": "banking.product.payment_dates.payment_bdc_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.business_day_convention.business_day_convention_code",
+      "child": "banking.product.reset_dates.fixing_bdc_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.country.country_code",
+      "child": "banking.party.master_agreement.governing_law_country_code",
+      "cardinality": "1..M",
+      "name": "governs",
+      "description": "A country's law governs many agreements."
+    },
+    {
+      "parent": "banking.ref.country.country_code",
+      "child": "banking.party.party.country_code",
+      "cardinality": "1..M",
+      "name": "domiciles",
+      "description": "A country is the domicile of many parties."
+    },
+    {
+      "parent": "banking.ref.country.country_code",
+      "child": "banking.ref.business_center.country_code",
+      "cardinality": "1..M",
+      "name": "hosts",
+      "description": "A country hosts many business centers."
+    },
+    {
+      "parent": "banking.ref.credit_event_type.credit_event_type_code",
+      "child": "banking.product.cds_credit_event.credit_event_type_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.currency.currency_code",
+      "child": "banking.market.fx_rate_fixing.currency1_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.currency.currency_code",
+      "child": "banking.market.fx_rate_fixing.currency2_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.currency.currency_code",
+      "child": "banking.party.account.currency_code",
+      "cardinality": "1..M",
+      "name": "denominates",
+      "description": "A currency is the base currency of many accounts."
+    },
+    {
+      "parent": "banking.ref.currency.currency_code",
+      "child": "banking.product.credit_default_swap.notional_currency_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.currency.currency_code",
+      "child": "banking.product.fx_exchanged_currency.currency_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.currency.currency_code",
+      "child": "banking.product.fx_rate.quote_currency1_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.currency.currency_code",
+      "child": "banking.product.fx_rate.quote_currency2_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.currency.currency_code",
+      "child": "banking.product.swap_stream.currency_code",
+      "cardinality": "1..M",
+      "name": "denominates",
+      "description": "A currency denominates many streams."
+    },
+    {
+      "parent": "banking.ref.currency.currency_code",
+      "child": "banking.product.swaption.premium_currency_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.currency.currency_code",
+      "child": "banking.ref.floating_rate_index.currency_code",
+      "cardinality": "1..M",
+      "name": "denominates",
+      "description": "A currency denominates many rate indices."
+    },
+    {
+      "parent": "banking.ref.currency.currency_code",
+      "child": "banking.valuation.valuation_measure.currency_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.day_count_fraction.day_count_fraction_code",
+      "child": "banking.product.credit_default_swap.day_count_fraction_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.day_count_fraction.day_count_fraction_code",
+      "child": "banking.product.swap_stream.day_count_fraction_code",
+      "cardinality": "1..M",
+      "name": "accrues",
+      "description": "A day count fraction is used by many streams."
+    },
+    {
+      "parent": "banking.ref.exercise_style.exercise_style_code",
+      "child": "banking.product.swaption.exercise_style_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.floating_rate_index.floating_rate_index_code",
+      "child": "banking.market.rate_fixing.floating_rate_index_code",
+      "cardinality": "1..M",
+      "name": "is fixed as",
+      "description": "An index has many fixings."
+    },
+    {
+      "parent": "banking.ref.floating_rate_index.floating_rate_index_code",
+      "child": "banking.product.floating_rate_spec.floating_rate_index_code",
+      "cardinality": "1..M",
+      "name": "is used by",
+      "description": "An index is used by many floating streams."
+    },
+    {
+      "parent": "banking.ref.id_scheme.id_scheme_code",
+      "child": "banking.party.party_identifier.id_scheme_code",
+      "cardinality": "1..M",
+      "name": "defines",
+      "description": "A scheme defines many identifiers."
+    },
+    {
+      "parent": "banking.ref.id_scheme.id_scheme_code",
+      "child": "banking.trade.trade_identifier.id_scheme_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.master_agreement_type.master_agreement_type_code",
+      "child": "banking.party.master_agreement.master_agreement_type_code",
+      "cardinality": "1..M",
+      "name": "classifies",
+      "description": "An agreement type classifies many master agreements."
+    },
+    {
+      "parent": "banking.ref.measure_type.measure_type_code",
+      "child": "banking.valuation.valuation_measure.measure_type_code",
+      "cardinality": "1..M",
+      "name": "is measured as",
+      "description": "A measure type appears in many valuations."
+    },
+    {
+      "parent": "banking.ref.message_type.message_type_code",
+      "child": "banking.messaging.fpml_message.message_type_code",
+      "cardinality": "1..M",
+      "name": "types",
+      "description": "A message type types many messages."
+    },
+    {
+      "parent": "banking.ref.party_role.party_role_code",
+      "child": "banking.trade.trade_party_role.party_role_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.party_type.party_type_code",
+      "child": "banking.party.party.party_type_code",
+      "cardinality": "1..M",
+      "name": "classifies",
+      "description": "A party type classifies many parties."
+    },
+    {
+      "parent": "banking.ref.period_unit.period_unit_code",
+      "child": "banking.market.rate_fixing.index_tenor_unit_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.period_unit.period_unit_code",
+      "child": "banking.product.calculation_period_dates.period_unit_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.period_unit.period_unit_code",
+      "child": "banking.product.credit_default_swap.payment_frequency_unit_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.period_unit.period_unit_code",
+      "child": "banking.product.floating_rate_spec.index_tenor_unit_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.period_unit.period_unit_code",
+      "child": "banking.product.payment_dates.payment_frequency_unit_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.period_unit.period_unit_code",
+      "child": "banking.product.reset_dates.reset_frequency_unit_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.product_type.product_type_code",
+      "child": "banking.product.product.product_type_code",
+      "cardinality": "1..M",
+      "name": "types",
+      "description": "A product type types many products."
+    },
+    {
+      "parent": "banking.ref.roll_convention.roll_convention_code",
+      "child": "banking.product.calculation_period_dates.roll_convention_code",
+      "cardinality": "1..M",
+      "name": "rolls",
+      "description": "A roll convention applies to many streams."
+    },
+    {
+      "parent": "banking.ref.trade_event_type.trade_event_type_code",
+      "child": "banking.trade.trade_event.trade_event_type_code",
+      "cardinality": "1..M"
+    },
+    {
+      "parent": "banking.ref.trade_status.trade_status_code",
+      "child": "banking.trade.trade.trade_status_code",
+      "cardinality": "1..M",
+      "name": "describes",
+      "description": "A status describes many trades."
+    },
+    {
+      "parent": "banking.trade.trade_event.trade_event_id",
+      "child": "banking.trade.trade_event.previous_trade_event_id",
+      "cardinality": "1..M",
+      "name": "is followed by",
+      "description": "An event can be followed by later events."
+    },
+    {
+      "parent": "banking.trade.trade_event.trade_event_id",
+      "child": "banking.trade.trade_novation.trade_event_id",
+      "cardinality": "1..1",
+      "name": "is detailed by",
+      "description": "A novation event has exactly one detail row."
+    },
+    {"parent": "banking.trade.trade.trade_id", "child": "banking.messaging.message_trade.trade_id", "cardinality": "1..M"},
+    {
+      "parent": "banking.trade.trade.trade_id",
+      "child": "banking.trade.trade_event.trade_id",
+      "cardinality": "1..M",
+      "name": "has events",
+      "description": "A trade has many lifecycle events."
+    },
+    {
+      "parent": "banking.trade.trade.trade_id",
+      "child": "banking.trade.trade_identifier.trade_id",
+      "cardinality": "1..M",
+      "name": "is identified by",
+      "description": "A trade has several identifiers."
+    },
+    {"parent": "banking.trade.trade.trade_id", "child": "banking.trade.trade_party_role.trade_id", "cardinality": "1..M"},
+    {
+      "parent": "banking.trade.trade.trade_id",
+      "child": "banking.valuation.valuation_set.trade_id",
+      "cardinality": "1..M",
+      "name": "is valued in",
+      "description": "A trade is valued many times."
+    },
+    {
+      "parent": "banking.trade.trade",
+      "child": "banking.party.party",
+      "cardinality": "M..M",
+      "name": "involves",
+      "description": "A trade involves several parties in different roles and a party is involved in many trades.",
+      "via": "banking.trade.trade_party_role"
+    },
+    {
+      "parent": "banking.valuation.valuation_set.valuation_set_id",
+      "child": "banking.valuation.valuation_measure.valuation_set_id",
+      "cardinality": "1..M",
+      "name": "has measures",
+      "description": "A valuation set has many measures."
+    },
+    {
+      "parent": "banking.valuation.valuation_set",
+      "child": "banking.ref.measure_type",
+      "cardinality": "M..M",
+      "name": "measures",
+      "description": "A valuation set contains several measures and a measure type is used in many valuation sets.",
+      "via": "banking.valuation.valuation_measure"
+    }
+  ],
+  "semantic": {
+    "metrics": [
+      {
+        "name": "CDS Notional",
+        "description": "Notional of credit default swaps, in the notional currency.",
+        "calculation": "credit_default_swap.notional_amount",
+        "aggregation": "sum",
+        "grain": ["Credit Default Swap"]
+      },
+      {
+        "name": "Gross Notional",
+        "description": "Total notional outstanding across interest rate swaps and credit default swaps, converted to the reporting currency first.",
+        "calculation": "{IRS Notional} + {CDS Notional}",
+        "aggregation": "none",
+        "grain": ["Trade"],
+        "tags": ["certified", "sensitive_financial"],
+        "governance": {"classification": "Confidential"}
+      },
+      {
+        "name": "IRS Notional",
+        "description": "Notional of interest rate swap streams, from their notional step schedules, in the stream currency.",
+        "calculation": "notional_step.notional_amount",
+        "aggregation": "sum",
+        "grain": ["Swap Stream"]
+      },
+      {
+        "name": "Net MTM",
+        "description": "Net mark-to-market: the sum of the NPV measures of the valuation sets, in the reporting currency.",
+        "calculation": "CASE WHEN valuation_measure.measure_type_code = 'NPV' THEN valuation_measure.amount END",
+        "aggregation": "sum",
+        "grain": ["Valuation", "Trade"],
+        "tags": ["certified", "valuation"],
+        "governance": {"classification": "Confidential"}
+      },
+      {
+        "name": "Novation Count",
+        "description": "Number of novations: trades transferred to a new counterparty.",
+        "calculation": "trade_novation.trade_event_id",
+        "aggregation": "count_distinct",
+        "grain": ["Trade Event"],
+        "governance": {"owner": "Operations", "lifecycle": "Proposed"}
+      },
+      {
+        "name": "Open Positions",
+        "description": "Trades that are live (status Active), per book.",
+        "calculation": "CASE WHEN trade.trade_status_code = 'Active' THEN trade.trade_id END",
+        "aggregation": "count_distinct",
+        "grain": ["Trade", "Book"],
+        "governance": {"owner": "Front Office"}
+      },
+      {
+        "name": "Trade Count",
+        "description": "Number of trades booked.",
+        "calculation": "trade.trade_id",
+        "aggregation": "count_distinct",
+        "grain": ["Trade"],
+        "tags": ["certified"],
+        "governance": {"owner": "Operations"}
+      }
+    ]
+  },
+  "alignment": {"acknowledged": ["tag-dropped:table:banking.reporting.v_person_directory_masked:pii"]}
+}

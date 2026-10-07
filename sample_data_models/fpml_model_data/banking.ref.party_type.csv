@@ -1,0 +1,4 @@
+party_type_code,party_type_name,description,is_active
+Bank,Bank,,true
+Corporate,Corporate,,true
+CCP,Central Counterparty,,true

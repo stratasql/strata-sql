@@ -1,0 +1,14 @@
+{
+  // Moves the heaviest/slowest-to-activate extensions (Docker check, native debug adapter, native DB binary,
+  // network-heavy chat activation) into a second extension host process, so they run in parallel instead of
+  // serially blocking the same host Strata activates in. See memory.md: "Extension host did not start in 10s".
+  "extensions.experimental.affinity": {
+    "ms-vscode-remote.remote-containers": 1,
+    "vadimcn.vscode-lldb": 1,
+    "chuckjonas.duckdb": 1,
+    "GitHub.copilot-chat": 1,
+    "Anthropic.claude-code": 1,
+    "Catppuccin.catppuccin-vsc": 1,
+    "ritwickdey.LiveServer": 1
+  }
+}

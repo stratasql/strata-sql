@@ -1,0 +1,3 @@
+swap_stream_id,effective_date,termination_date,effective_date_bdc_code,termination_date_bdc_code,calculation_period_bdc_code,roll_convention_code,period_multiplier,period_unit_code
+1,2026-01-19,2031-01-19,NONE,MODFOLLOWING,MODFOLLOWING,NONE,12,M
+2,2026-01-19,2031-01-19,NONE,MODFOLLOWING,MODFOLLOWING,NONE,6,M

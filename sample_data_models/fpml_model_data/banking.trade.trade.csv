@@ -1,0 +1,2 @@
+trade_id,product_id,trade_date,execution_timestamp,trade_status_code,master_agreement_id,book_id,execution_venue_party_id,origin_system,version_number,created_at,updated_at
+5001,1001,2026-01-15,2026-01-15 09:30:00,Active,,1,,RatesFO,1,2026-01-15 09:30:00,

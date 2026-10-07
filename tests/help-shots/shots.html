@@ -1,0 +1,332 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/media/canvas.css">
+<style>
+:root{--vscode-font-family:-apple-system,"Segoe UI",sans-serif;--vscode-editor-background:#1f1f1f;--vscode-editor-foreground:#cccccc;--vscode-foreground:#cccccc;--vscode-button-background:#0078d4;--vscode-button-foreground:#fff;--vscode-button-hoverBackground:#026ec1;--vscode-button-secondaryBackground:#313131;--vscode-button-secondaryForeground:#ccc;--vscode-button-secondaryHoverBackground:#3c3c3c;--vscode-input-background:#313131;--vscode-input-foreground:#ccc;--vscode-input-border:#3c3c3c;--vscode-editorWidget-background:#202020;--vscode-editorWidget-border:#454545;--vscode-editorGroupHeader-tabsBackground:#181818;--vscode-sideBar-background:#181818;--vscode-panel-border:#2b2b2b;--vscode-focusBorder:#0078d4;--vscode-list-activeSelectionBackground:#04395e;--vscode-editorHoverWidget-background:#202020;--vscode-editorHoverWidget-foreground:#ccc;--vscode-editorHoverWidget-border:#454545;--vscode-charts-blue:#3794ff;--vscode-charts-green:#3f8f5f;--vscode-charts-purple:#a371f7;--vscode-charts-yellow:#cca700;--vscode-charts-orange:#d18616;--vscode-errorForeground:#f85149}
+body{font-size:13px}
+</style></head>
+<body class="vscode-dark"><div id="app"></div>
+<script>
+const Q=new URLSearchParams(location.search), MODEL=Q.get('model')||'northwind', SCENE=Q.get('scene')||'canvas';
+window.__store={};
+if(Q.get('kind')==='light') document.body.classList.add('vscode-light'); // stand-in for VS Code's light theme class
+const ok=(u)=>fetch(u).then(r=>r.ok?r.text():null);
+window.__posts=[];
+window.acquireVsCodeApi=()=>({postMessage:async m=>{
+  window.__posts.push(m);
+  if(m.type==='ready'){const dir=Q.get('legacy')?'/tests/fixtures/legacy':'', [xt,xh,xl]=Q.get('legacy')?['.model.json','.model.version.json','.none']:['.model.json','.model.history.jsonl','.model.layout.json']; // legacy=1: an older model and log (tests/fixtures/legacy)
+    let [t,h,lay]=await Promise.all([ok(`${dir}/${MODEL}${xt}`),ok(`${dir}/${MODEL}${xh}`),ok(`${dir}/${MODEL}${xl}`)]);
+    if(Q.get('empty')){t='{}';h=null;lay=null;} // an empty file: the empty-state screen and the New project dialog
+    if(Q.get('physical')){const o=JSON.parse(t);delete o.conceptual;delete o.logical;delete o.semantic;delete o.version;o.tables.forEach(x=>delete x.entity);t=JSON.stringify(o);h=null;} // physical level only, no metrics
+    if(Q.get('broken')){const o=JSON.parse(t);o.relationships.push({parent:'other_team.sales.orders.id',child:'main.sales.orders.customer_id',cardinality:'1..M',note:'lives in the sales repo'});t=JSON.stringify(o);h=null;} // a relationship to another team's table
+    // release 2 part 4 (ADR-0045 extended): simulate splitting Northwind into domains by removing `shippers` from this file (as a real split
+    // would: it moves to the Catalog part) while leaving the real "shipper delivers many orders" relationship exactly as written — the
+    // reference into shippers is now cross-part, not broken, and ?domainof=1 (below) badges the tables that stayed local.
+    if(Q.get('crosspart')){const o=JSON.parse(t);o.tables=o.tables.filter(x=>x.name!=='shippers');t=JSON.stringify(o);h=null;}
+    const {layout,version,...content}=JSON.parse(t);
+    // release 2 part 3 (ADR-0045 amended), Domains dialog scenes: ?domains=1 sends the same starter grouping lib/project.js's TEMPLATES.northwind
+    // seeds a fresh Northwind project with (kept in sync by hand: a browser harness cannot `require` that Node-only module).
+    const NW_DOMAINS=[{name:'Sales',description:'Selling to customers and looking after their orders',owner:'Head of Sales',concepts:['Customer','Order','Sales Territory']},{name:'Catalog',description:'What we sell and who supplies and ships it',owner:'Head of Merchandising',concepts:['Product','Supplier','Shipper']},{name:'HR',owner:'HR Director',concepts:['Employee','Location']}];
+    window.postMessage({type:'model',text:t,history:h,layoutFile:lay,dataDir:'data',themeName:Q.get('themeName')||'',layoutKey:MODEL+'.model.json',layout:Q.get('layout')?{canvas:JSON.parse(Q.get('layout'))}:null,
+      domains:(Q.get('domains')||Q.get('indexfile'))?NW_DOMAINS:undefined,
+      crossPart:Q.get('crosspart')?{tables:['northwind.sales.shippers'],columns:['northwind.sales.shippers.shipper_id'],entities:[],concepts:['shipper'],metrics:[],duplicates:[],owner:{tables:{'northwind.sales.shippers':'catalog'},concepts:{shipper:'catalog'},entities:{},metrics:{}},domainOfPart:{catalog:'Catalog'},partModel:{catalog:'data_models/catalog/catalog.model.json'}}:undefined,
+      // Project View only (?domainof=1): the domain each table/concept came from, badged on its card (media/canvas.js#domainBadge); a small,
+      // representative subset of what a real split's project index would give the assembled model, kept in sync with NW_DOMAINS by hand.
+      domainOf:(Q.get('domainof')||Q.get('indexfile'))?{tables:{'northwind.sales.customers':'Sales','northwind.sales.orders':'Sales','northwind.sales.territories':'Sales','northwind.product.products':'Catalog','northwind.product.suppliers':'Catalog','northwind.sales.shippers':'Catalog','northwind.hr.employees':'HR','northwind.hr.territories':'HR'},concepts:{customer:'Sales',order:'Sales','sales territory':'Sales',product:'Catalog',supplier:'Catalog',shipper:'Catalog',employee:'HR',location:'HR'},entities:{}}:undefined,
+      projectView:(Q.get('domainof')||Q.get('indexfile'))?true:undefined,
+      // release 2 part 9 (ADR-0045 amended): ?indexfile=1 simulates opening the project-index file's own tab specifically (not the ad hoc,
+      // never-editable bespoke Project View panel ?domainof=1 alone simulates) — the one read-only, assembled view with a real manifest
+      // behind it, so Project settings / per-domain embeddings / creating a tag or policy are enabled there (`indexFile`).
+      indexFile:Q.get('indexfile')?true:undefined,
+      embedParts:Q.get('indexfile')?[{name:'sales',hasEmbeddings:true,upToDate:true,generatedAt:new Date(Date.now()-3600e3).toISOString()},{name:'catalog',hasEmbeddings:true,upToDate:false,generatedAt:new Date(Date.now()-864e5).toISOString()},{name:'hr',hasEmbeddings:false,upToDate:false}]:undefined,
+      // release 2 part 5 (ADR-0045 point 10): ?archived=1 simulates opening the archived (pre-split) file itself — the persistent banner
+      // (media/canvas.js#renderBanner), read-only, naming the parts a real split would have produced from this same Northwind copy.
+      archived:Q.get('archived')?{parts:[{name:'sales',model:'data_models/sales/sales.model.json'},{name:'catalog',model:'data_models/catalog/catalog.model.json'},{name:'hr',model:'data_models/hr/hr.model.json'}],index:'data_models/northwind/northwind.model.json'}:undefined,
+      readOnly:(Q.get('domainof')||Q.get('archived')||Q.get('indexfile'))?true:undefined, host:(Q.get('domainof')||Q.get('archived')||Q.get('indexfile'))?'vscode':undefined,
+      embedFile:`${MODEL}.model.embeddings.json`,
+      embedProviders:[{id:'openai',label:'OpenAI',model:'text-embedding-3-small',needsKey:true},{id:'gemini',label:'Google Gemini',model:'gemini-embedding-001',needsKey:true},{id:'claude',label:'Claude (via Voyage AI)',model:'voyage-3.5',needsKey:true},{id:'gemma',label:'Gemma (EmbeddingGemma 300M)',model:'onnx-community/embeddinggemma-300m-ONNX',needsKey:false,local:true,download:'~200 MB'},{id:'minilm',label:'MiniLM (all-MiniLM-L6-v2)',model:'Xenova/all-MiniLM-L6-v2',needsKey:false,local:true,download:'~25 MB'}],
+      embedKeys:{openai:'secret',gemini:null,claude:null,gemma:'local',minilm:'local'},
+      embed:{file:`${MODEL}.model.embeddings.json`,generatedAt:new Date(Date.now()-3600e3).toISOString(),version:{},contentHash:StrataModel.hash(StrataModel.canon(content)),providers:{openai:{model:'text-embedding-3-small',items:63},gemma:{model:'onnx-community/embeddinggemma-300m-ONNX',items:63},minilm:{model:'Xenova/all-MiniLM-L6-v2',items:63}}},
+      settings:{name:'Ada Lovelace',email:'ada@example.com',timezone:'UTC',system:'laptop',arrows:'squared',animate:true,theme:Q.get('theme')||'auto',themeVariant:Q.get('variant')||'auto',versionMode:'auto',embed:{openai:true,gemini:true,claude:true,gemma:true,minilm:true}}},'*');}
+  if(m.type==='edit'){window.__store.text=m.text; if(m.history) window.__store.history=m.history; if(m.positions) window.__store.positions=m.positions;}
+  if(m.type==='positions'){window.__store.positions=m.text;}
+  if(m.type==='data'&&m.op==='read'){window.postMessage({type:'data',file:m.file,text:await ok('/'+m.file)},'*');}
+}});
+</script>
+<script src="/media/brand.js"></script><script src="/media/themes.js"></script><script src="/media/model.js"></script><script src="/media/legacy.js"></script><script src="/media/align.js"></script><script src="/media/gov.js"></script><script src="/media/impact.js"></script><script src="/media/order.js"></script><script src="/media/md.js"></script><script src="/media/codegen.js"></script><script src="/media/layout.js"></script><script src="/media/canvas.js"></script>
+<script>
+const $=(s)=>document.querySelector(s), $$=(s)=>[...document.querySelectorAll(s)], sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const tb=(t)=>$(`[data-tip^="${t}"]`), seg=(t)=>$$('.seg button').find(b=>b.textContent===t||(b.querySelector('.full')||{}).textContent===t); // level buttons carry a full and a short label
+const ptr=(t,x,y,el)=>(el||window).dispatchEvent(new PointerEvent(t,{clientX:x,clientY:y,button:0,bubbles:true}));
+const OV=()=>$$('.overlay').pop(), mbtn=(t)=>[...OV().querySelectorAll('.modal button')].find(b=>b.textContent===t); // the toast can be the body's last child
+const editCard=(n)=>$$('.card').find(c=>c.querySelector('.tname').textContent===n).querySelector('[data-act="edit-table"]').click();
+async function scopeTo(labels){ $('.scopebtn').click(); await sleep(80); for(const l of labels){$$('#scopepop .sp-row').find(r=>r.textContent.startsWith(l)).querySelector('input').click(); await sleep(100);} }
+const closePop=async()=>{ptr('pointerdown',5,400,$('#vp')); ptr('pointerup',5,400); await sleep(80);};
+async function selectTable(name){ const h=$$('.card').find(c=>c.querySelector('.tname').textContent===name).querySelector('.head'); const r=h.getBoundingClientRect(); ptr('pointerdown',r.x+20,r.y+8,h); ptr('pointerup',r.x+20,r.y+8); await sleep(100); }
+async function hoverRow(col){ const row=$$('.row').find(r=>r.querySelector('.cname').textContent===col); const b=row.getBoundingClientRect(); document.dispatchEvent(new MouseEvent('mousemove',{clientX:b.x+90,clientY:b.y+10,bubbles:true})); row.dispatchEvent(new MouseEvent('mouseover',{bubbles:true,clientX:b.x+90,clientY:b.y+10})); await sleep(450); }
+async function pickRow(card,col){ const c=$$('.card').find(x=>x.querySelector('.tname').textContent===card); const row=[...c.querySelectorAll('.row')].find(r=>r.querySelector('.cname').textContent===col); const b=row.getBoundingClientRect(); ptr('pointerdown',b.x+40,b.y+8,row); ptr('pointerup',b.x+40,b.y+8); await sleep(200); }
+// release 2 part 11: a PASS/FAIL overlay, readable in a screenshot and greppable from a headless-Chrome --dump-dom (the same technique
+// part 10's own "scratch harness" verified Add Table with, now a committed scene).
+const note=(id,text)=>document.body.append(Object.assign(document.createElement('pre'),{id,textContent:text,style:'position:fixed;bottom:0;left:0;color:#0f0;background:#000;z-index:999;padding:4px;font-size:14px;white-space:pre-wrap'}));
+// helpers for the alignment scenes: add an unmapped table, unmap shippers, drop the inherited pii tag on employees
+async function misalign(){
+  tb('Add').click(); await sleep(80); $$('.menu .mitem').find(b=>b.textContent==='Table').click(); await sleep(150);
+  $$('.modal input')[0].value='customer_address'; const sel=$$('.modal select').find(s=>[...s.options].some(o=>o.textContent==='northwind.sales')); sel.value=[...sel.options].find(o=>o.textContent==='northwind.sales').value; mbtn('Save').click(); await sleep(200);
+  $$('.card').find(c=>c.querySelector('.tname').textContent==='shippers').querySelector('[data-act="edit-table"]').click(); await sleep(150);
+  $$('.modal .chips.ents input:checked').forEach(i=>i.click()); mbtn('Save').click(); await sleep(200);
+  $$('.card').find(c=>c.querySelector('.tname').textContent==='employees').querySelector('[data-act="edit-table"]').click(); await sleep(150);
+  $$('.modal .chip.inh').find(c=>c.textContent.includes('Personal')).querySelector('input').click(); mbtn('Save').click(); await sleep(200);
+}
+const scenes={
+  async idle(){},
+  // Change 29: the note on an older model (?legacy=1), a relationship to another team's table (?broken=1), the note after a Git merge of two histories
+  async 'legacy-note'(){},
+  async 'broken-link'(){ tb('Alignment').click(); await sleep(400); },
+  // release 2 part 5 (ADR-0045 point 10): the persistent banner on an archived (pre-split) file (?archived=1)
+  async 'archived-note'(){},
+  // release 2 part 4 (ADR-0045 extended): the same reference, drawn two ways. ?crosspart=1 removes `shippers` (as a real split does) and
+  // supplies the project index that resolves it: a neutral, labelled stub on the canvas instead of the vanished / red-broken look before this pass.
+  async 'crosspart-stub'(){ await scopeTo(['northwind.sales']); await closePop(); await selectTable('orders'); await sleep(150); },
+  // the read-only Project View (?domainof=1): every table on one canvas, badged and legended by the domain it came from, real edges throughout
+  async 'project-view'(){ await scopeTo(['northwind.sales','northwind.hr','northwind.product']); await closePop(); await sleep(150); },
+  async 'history-merge'(){
+    const SM=StrataModel, base=await ok('/example.model.history.jsonl'), F0=JSON.parse(await ok('/example.model.json')), hb=SM.parseLog(base).history, head=SM.headsOf(hb,'modelling')[0];
+    const mk=(who,desc,at)=>{const h=SM.parseLog(base).history, st={...SM.stateAt(h,head.chain)}; st.project={...st.project,description:desc}; SM.commit(h,'modelling',head.chain,st,{user:who,email:who+'@x.io',system:'box',message:who+' edits the project',at}); return h;};
+    const A=mk('ada','Ada wrote this',Date.now()-4000), B=mk('bob','Bob wrote this',Date.now()-2000), FA=JSON.parse(JSON.stringify(F0)); FA.project.description='Ada wrote this';
+    window.postMessage({type:'model',text:SM.stringify(FA)+'\n',history:SM.logText({entries:[...A.entries,...B.entries.slice(hb.entries.length)]}),layoutFile:null,dataDir:'data'}); await sleep(500); tb('Version history').click(); await sleep(300); },
+  // canvas controls (bottom-left) with View settings open, zoomed in so the mini-map shows
+  async 'canvas-controls'(){ await selectTable('orders'); for(let i=0;i<4;i++) $('#ctl [data-ctl="zoomIn"]').click(); await sleep(150); $('#ctl [data-ctl="view"]').click(); await sleep(150); },
+  // zoomed into sales with orders selected: the mini-map shows where the view is
+  async minimap(){ await selectTable('orders'); const vp=$('#vp'), b=vp.getBoundingClientRect(), c=$$('.card').find(c=>c.querySelector('.tname').textContent==='orders').getBoundingClientRect();
+    for(let i=0;i<5;i++) vp.dispatchEvent(new WheelEvent('wheel',{deltaY:-25,ctrlKey:true,clientX:c.x+c.width/2,clientY:c.y+40,bubbles:true,cancelable:true})); await sleep(200); },
+  async canvas(){ await scopeTo(['northwind.sales']); await closePop(); await selectTable('orders'); await hoverRow('freight'); },
+  async 'theme'(){ await scopeTo(['northwind.sales']); await closePop(); await selectTable('orders'); await sleep(100); },
+  async conceptual(){ seg('Conceptual').click(); await sleep(250); await selectTable('Customer'); },
+  async logical(){ seg('Logical').click(); await sleep(250); },
+  // alignment: a new unmapped table, an unmapped one, and a dropped inherited tag
+  async alignment(){ await misalign(); await scopeTo(['northwind.sales','northwind.hr']); await closePop(); tb('Alignment').click(); await sleep(250); },
+  async 'alignment-mapping'(){ await misalign(); tb('Alignment').click(); await sleep(200); seg('Mapping').click(); await sleep(150);
+    for(const n of ['regions','territories']) $$('#align .mrow').find(r=>r.querySelector('.mname').textContent===n).querySelector('input').click(), await sleep(80); },
+  async 'impact-logical'(){ seg('Logical').click(); await sleep(250); tb('Impact analysis').click(); await sleep(200);
+    const row=$$('.card').find(c=>c.querySelector('.tname').textContent==='Customer').querySelectorAll('.row')[2], b=row.getBoundingClientRect(); ptr('pointerdown',b.x+40,b.y+6,row); ptr('pointerup',b.x+40,b.y+6); await sleep(250); },
+  async 'load-order-conceptual'(){ seg('Conceptual').click(); await sleep(250); tb('Load order').click(); await sleep(250); await selectTable('Order'); await sleep(150); },
+  async 'alignment-generate'(){ tb('Alignment').click(); await sleep(250); },
+  async 'entity-dialog'(){ seg('Logical').click(); await sleep(250); $$('.card').find(c=>c.querySelector('.tname').textContent==='Customer').querySelector('[data-act="edit-table"]').click(); await sleep(200); },
+  async 'table-realises'(){ await scopeTo(['northwind.hr']); await closePop(); $$('.card').find(c=>c.querySelector('.tname').textContent==='employees').querySelector('[data-act="edit-table"]').click(); await sleep(200); $$('.modal .field span').find(s=>s.textContent==='Realises logical entity').scrollIntoView(); await sleep(100); },
+  async views(){ await scopeTo(['northwind.reporting']); await closePop(); await sleep(100); },
+  async 'view-dialog'(){ await scopeTo(['northwind.reporting']); await closePop(); $$('.card').find(c=>c.querySelector('.tname').textContent==='order_subtotals').querySelector('[data-act="edit-table"]').click(); await sleep(150); },
+  async history(){ await scopeTo(['northwind.sales']); await closePop();
+    const edit=(n)=>$$('.card').find(c=>c.querySelector('.tname').textContent===n).querySelector('[data-act="edit-table"]').click();
+    $('.card .foot button').click(); await sleep(60); $('.modal input').value='discount_reason'; mbtn('Save').click(); await sleep(120);
+    edit('orders'); await sleep(120); $$('.modal textarea')[0].value='Customer order header. Now also records the **shipping** address.'; mbtn('Save').click(); await sleep(150);
+    tb('Tags').click(); await sleep(80); $$('.modal button').find(b=>b.textContent==='+ Create tag').click(); await sleep(60);
+    $$('.overlay:last-child .modal input:not([type=checkbox])')[0].value='gdpr_review'; mbtn('Save').click(); await sleep(60); mbtn('Save').click(); await sleep(120);
+    edit('shippers'); await sleep(120); mbtn('Delete').click(); await sleep(120); mbtn('Delete').click(); await sleep(200);
+    tb('Version history').click(); await sleep(150); $$('#history .vb .lnk')[1].click(); await sleep(60); $$('#history .vb .lnk')[2].click(); await sleep(60); $$('#history .vb .lnk')[3].click(); await sleep(80); },
+  async hover(){ await scopeTo(['northwind.sales']); await closePop();
+    $$('.card').find(c=>c.querySelector('.tname').textContent==='orders').querySelector('[data-act="edit-table"]').click(); await sleep(120);
+    $$('.modal textarea')[0].value='# Orders\n\nHeader of a **customer order**: who ordered, who sold it and where it ships.\n\n- one row per order\n- lines live in `order_details`\n\n> Owned by *Sales Operations*'; mbtn('Save').click(); await sleep(200);
+    const head=$$('.card').find(c=>c.querySelector('.tname').textContent==='orders').querySelector('.head'); const r=head.getBoundingClientRect();
+    head.dispatchEvent(new MouseEvent('mousemove',{clientX:r.x+120,clientY:r.y+10,bubbles:true})); head.dispatchEvent(new MouseEvent('mouseover',{bubbles:true,clientX:r.x+120,clientY:r.y+10})); await sleep(500); },
+  async 'hover-column'(){ await scopeTo(['northwind.sales']); await closePop(); await hoverRow('customer_id'); },
+  async search(){ await scopeTo(['northwind.sales']); await closePop(); window.postMessage({type:'search'},'*'); await sleep(80);
+    const sq=$('.sq'); sq.value='customer'; sq.dispatchEvent(new Event('input')); await sleep(80);
+    const g=$('.sgrip').getBoundingClientRect(); ptr('pointerdown',g.x+3,g.y+3,$('.sgrip')); ptr('pointermove',g.x+90,g.y+50); ptr('pointermove',g.x+180,g.y+120); ptr('pointerup',g.x+180,g.y+120); await sleep(120); },
+  async scope(){ $('.scopebtn').click(); await sleep(80); for(const l of ['northwind.sales','northwind.hr']){$$('#scopepop .sp-row').find(r=>r.textContent.startsWith(l)).querySelector('input').click(); await sleep(100);} },
+  async column(){ await scopeTo(['northwind.sales']); await closePop(); const card=$$('.card').find(c=>c.querySelector('.tname').textContent==='orders'); const row=[...card.querySelectorAll('.row')].find(r=>r.querySelector('.cname').textContent==='customer_id'); const b=row.getBoundingClientRect(); ptr('pointerdown',b.x+60,b.y+8,row); ptr('pointerup',b.x+60,b.y+8); await sleep(200); },
+  async governance(){ tb('Tags').click(); await sleep(150); },
+  // the Governance tab (ADR-0038): policy list, graph of one policy, the policy editor
+  async 'gov-list'(){ seg('Governance').click(); await sleep(300); $('#govview tr[data-pol="GDPR"] .gvname').click(); await sleep(200); },
+  async 'gov-graph'(){ seg('Governance').click(); await sleep(250); $('#govview tr[data-pol="GDPR"] input').click(); $('#govview tr[data-pol="Mask Personal Data"] input').click(); await sleep(80); $$('#govview .gvselbar button').find(b=>b.textContent==='View graph').click(); await sleep(300); },
+  async 'gov-view'(){ seg('Governance').click(); await sleep(250); $('#govview [aria-label="View Customer Data"]').click(); await sleep(250); },
+  async 'gov-edit'(){ seg('Governance').click(); await sleep(250); $('#govview [aria-label="Edit Customer Data"]').click(); await sleep(250); },
+  // Domains (release 2 part 3, ADR-0045 amended; its own level since change 31, ADR-0047): the list, pre-populated (?domains=1, see NW_DOMAINS above), and editing one
+  async 'domains'(){ seg('Domains').click(); await sleep(250); },
+  async 'domains-edit'(){ seg('Domains').click(); await sleep(250); $$('#govview .gvname button').find(b=>b.textContent==='Sales').click(); await sleep(200); },
+  // change 31 (ADR-0047): Domains is its own level, not a Governance view. PASS/FAIL text for `--dump-dom` (?scene=domains-check&domains=1, add &indexfile=1 for the index tab)
+  async 'domains-check'(){
+    const res=[], posts=()=>window.__posts.filter(p=>p.type==='domains'), lv=()=>$$('.seg button.on').map(b=>b.textContent.slice(0,3))[0];
+    seg('Governance').click(); await sleep(250);
+    res.push('govSeg='+($$('#govview .seg button').map(b=>b.textContent).join('/')==='Policies/Graph'?'PASS':'FAIL'));
+    seg('Domains').click(); await sleep(250);
+    res.push('level='+(seg('Domains').classList.contains('on')&&!$('#govview').hidden&&$('#govview .gvhead strong').textContent==='Domains'?'PASS':'FAIL'));
+    res.push('rows='+($$('#govview tbody tr').length===3?'PASS':'FAIL'));
+    res.push('scopeBtnGone='+(!$('[data-tip^="Scope"]')?'PASS':'FAIL'));
+    const editable=!!$$('#govview button').find(b=>b.textContent==='+ New domain');
+    if(Q.get('indexfile')){ // editable on the index tab; a split project's names are locked
+      $$('#govview .gvname button').find(b=>b.textContent==='Sales').click(); await sleep(150);
+      res.push('nameLocked='+($('#govview .gvedit input').disabled?'PASS':'FAIL'));
+      $$('#govview button').find(b=>b.textContent==='Cancel').click(); await sleep(100);
+    }
+    res.push('editable='+(editable?'PASS':'FAIL'));
+    // create, edit, back link, delete
+    $$('#govview button').find(b=>b.textContent==='+ New domain').click(); await sleep(150);
+    res.push('backLink='+($$('#govview .gvhead button').some(b=>b.textContent==='← Domains')?'PASS':'FAIL'));
+    const nm=$('#govview .gvedit input'); nm.value='Finance'; nm.dispatchEvent(new Event('input',{bubbles:true}));
+    $$('#govview button').find(b=>b.textContent==='Create domain').click(); await sleep(200);
+    const p=posts().at(-1);
+    res.push('created='+(p&&p.domains.some(d=>d.name==='Finance')&&$$('#govview tbody tr').length===4?'PASS':'FAIL'));
+    const before=posts().length;
+    $$('#govview .gvname button').find(b=>b.textContent==='Finance').click(); await sleep(150);
+    $$('#govview button').find(b=>b.textContent==='Delete').click(); await sleep(150);
+    mbtn('Delete').click(); await sleep(200);
+    res.push('deleted='+(posts().length===before+1&&!posts().at(-1).domains.some(d=>d.name==='Finance')&&$$('#govview tbody tr').length===3?'PASS':'FAIL'));
+    // the level survives a layout save/restore, and Governance still opens on its own
+    seg('Physical').click(); await sleep(150); seg('Domains').click(); await sleep(150);
+    await sleep(900);
+    const lay=window.__posts.filter(p=>p.type==='layout').at(-1);
+    if(!Q.get('indexfile')) res.push('layoutLevel='+(lay&&lay.state.level==='domains'?'PASS':'FAIL')); // a read-only tab never saves its layout
+    seg('Governance').click(); await sleep(200);
+    res.push('govAgain='+($('#govview .gvhead strong').textContent==='Governance'?'PASS':'FAIL'));
+    note('domainscheck','DOMAINS '+res.join(' '));
+  },
+  async semantic(){ seg('Semantic').click(); await sleep(300); await selectTable('Revenue'); await sleep(100); },
+  async 'impact-semantic'(){ seg('Semantic').click(); await sleep(300); tb('Impact analysis').click(); await sleep(200); await pickRow('order_details','discount'); await sleep(150); },
+  async settings(){ tb('Settings').click(); await sleep(150); $$('.modal h3.sec').find(h=>h.textContent==='Visualization').scrollIntoView(); await sleep(100); },
+  async data(){ await scopeTo(['northwind.sales']); await closePop(); tb('Sample data').click(); await sleep(500); $$('.ditem').find(e=>e.textContent.startsWith('northwind.sales.customers')).click(); await sleep(400); },
+  async impact(){ await scopeTo(['northwind.product','northwind.reporting']); await closePop(); tb('Impact analysis').click(); await sleep(150); await pickRow('categories','category_id'); },
+  async 'load-order'(){ await scopeTo(['northwind.sales']); await closePop(); tb('Load order').click(); await sleep(200); await selectTable('orders'); await sleep(150); },
+  async 'load-order-tree'(){ await scopeTo(['northwind.sales']); await closePop(); tb('Load order').click(); await sleep(200); seg('Tree').click(); await sleep(150); await selectTable('order_details'); await sleep(150); },
+  async 'load-order-pipeline'(){ await scopeTo(['northwind.sales']); await closePop(); tb('Load order').click(); await sleep(200); await selectTable('orders'); seg('Pipeline').click(); await sleep(150); [...$$('#order .dh button')].find(b=>b.textContent==='⛶').click(); await sleep(250); $('#order .ibody').scrollTop=$('.odagwrap').offsetTop-70; await sleep(100); },
+  async 'sla-dialog'(){ await scopeTo(['northwind.sales']); await closePop(); $$('.card').find(c=>c.querySelector('.tname').textContent==='orders').querySelector('[data-act="edit-table"]').click(); await sleep(150); const sel=$$('.modal select').find(x=>[...x.options].some(o=>o.value==='exclude')); sel.scrollIntoView(); await sleep(100); },
+  async 'load-order-fpml'(){ tb('Load order').click(); await sleep(250); seg('Pipeline').click(); await sleep(200); [...$$('#order .dh button')].find(b=>b.textContent==='⛶').click(); await sleep(250); $('#order .ibody').scrollTop=$('.odagwrap').offsetTop-24; await sleep(100); },
+  async 'impact-linked'(){ await scopeTo(['northwind.hr']); await closePop(); tb('Impact analysis').click(); await sleep(200); await selectTable('employee_territories'); await sleep(200); },
+  async 'code-dialog'(){ await scopeTo(['northwind.sales']); await closePop(); tb('Tools').click(); await sleep(150); $$('#toolspop button.tool').find(b=>b.textContent.includes('ETL')).click(); await sleep(200); },
+  async 'impact-safe'(){ await scopeTo(['northwind.sales','northwind.hr']); await closePop(); tb('Impact analysis').click(); await sleep(150); await pickRow('customers','fax'); await pickRow('employees','notes'); },
+  async 'impact-unused'(){ await scopeTo(['northwind.sales','northwind.hr','northwind.product']); await closePop(); tb('Impact analysis').click(); await sleep(200); },
+  async project(){ tb('Project settings').click(); await sleep(150); },
+  async tools(){ await scopeTo(['northwind.sales']); await closePop(); $('.toolsbtn').click(); await sleep(150); },
+  async 'embed-confirm'(){ await scopeTo(['northwind.sales']); await closePop(); $('.toolsbtn').click(); await sleep(100); $('.tool').click(); await sleep(150); },
+  // release 2 part 8 (ADR-0045 extended): Impact analysis genuinely selecting and analysing a table in the read-only Project View
+  // (?domainof=1) — the bug this pass fixed (a header click silently did nothing in any read-only view) is what selectTable exercises.
+  async 'project-view-impact'(){ await scopeTo(['northwind.sales','northwind.hr','northwind.product']); await closePop(); tb('Impact analysis').click(); await sleep(200); await selectTable('shippers'); await sleep(200); },
+  // the Tools menu in the Project View: ETL/ELT export and HTML export enabled (pure reads of the assembled model), embeddings and the
+  // live view disabled with their own specific reason instead of the generic read-only one.
+  async 'project-view-tools'(){ $('.toolsbtn').click(); await sleep(150); },
+  // release 2 part 9 (ADR-0045 amended), ?indexfile=1: the project-index file's own Tools popover — embeddings ENABLED (per-domain status,
+  // "N of M parts up to date"), unlike the ad hoc Project View above where they stay disabled; the live view still stays disabled either way.
+  async 'index-file-tools'(){ $('.toolsbtn').click(); await sleep(150); },
+  // Project settings is enabled too (writes to every part's own model) — the same dialog, opened from the project-index file.
+  async 'index-file-project'(){ tb('Project settings').click(); await sleep(150); },
+  // and the Governance tab's "+ New policy" / "Tags…" are enabled (they route to governance.json).
+  async 'index-file-gov'(){ seg('Governance').click(); await sleep(250); },
+  // release 2 part 10 (ADR-0045 amended): adding a table from the project-index file — the Add menu is enabled (was blocked before this
+  // pass) and a new table's dialog gets its own "Domain" field (media/canvas.js#domainField), routed to whichever part is picked.
+  async 'index-file-add-table'(){ tb('Add').click(); await sleep(80); $$('.menu .mitem').find(b=>b.textContent==='Table').click(); await sleep(150); $$('.modal .field span').find(s=>s.textContent==='Domain').scrollIntoView(); await sleep(100); },
+  // release 2 part 11 (ADR-0045 amended): the Navigator's reveal, driven straight at the webview (extension.js's own host-side routing is
+  // covered by tests/host.check.js) — a table, a column (flash), a concept/entity/metric (level switch + selection) and a relationship
+  // (resolved to the child table), confirming each actually selects/scrolls the right card, not just that a message was posted.
+  async 'index-file-reveal'(){
+    const post=(kind,ref,column)=>window.postMessage({type:'reveal',kind,ref,column},'*');
+    const card=(n)=>$$('.card').find(c=>(c.querySelector('.tname')||{}).textContent===n);
+    const res=[];
+    post('table','northwind.sales.orders'); await sleep(200);
+    res.push('table='+(card('orders')&&card('orders').classList.contains('sel')?'PASS':'FAIL'));
+    post('table','northwind.sales.orders','customer_id'); await sleep(120);
+    res.push('column='+($$('.row.flash').some(r=>r.querySelector('.cname').textContent==='customer_id')?'PASS':'FAIL'));
+    post('concept','Customer'); await sleep(200);
+    res.push('concept='+(seg('Conceptual').classList.contains('on')&&card('Customer')&&card('Customer').classList.contains('sel')?'PASS':'FAIL'));
+    post('entity','Customer'); await sleep(200);
+    res.push('entity='+(seg('Logical').classList.contains('on')&&card('Customer')&&card('Customer').classList.contains('sel')?'PASS':'FAIL'));
+    post('metric','Revenue'); await sleep(200);
+    res.push('metric='+(seg('Semantic').classList.contains('on')&&card('Revenue')&&card('Revenue').classList.contains('sel')?'PASS':'FAIL'));
+    post('relationship','northwind.hr.employees.employee_id>northwind.sales.orders.employee_id'); await sleep(200);
+    res.push('relationship='+(card('orders')&&card('orders').classList.contains('sel')?'PASS':'FAIL'));
+    note('revealcheck','REVEAL '+res.join(' '));
+  },
+  // release 2 part 11: opening an EXISTING, previously-unassigned table (shippers has no ext.homeDomain) shows the Domain field too, not
+  // only when creating a new one — the same domainField() the Add-table dialog already uses, called unconditionally in openTable().
+  async 'index-file-domain-existing'(){
+    $$('.card').find(c=>c.querySelector('.tname').textContent==='shippers').querySelector('[data-act="edit-table"]').click(); await sleep(150);
+    const domSel=$$('.modal .field').find(f=>f.querySelector('span').textContent==='Domain')?.querySelector('select');
+    note('domaincheck', domSel ? `DOMAIN FIELD PASS: value=${JSON.stringify(domSel.value)} options=[${[...domSel.options].map(o=>o.textContent).join(', ')}]` : 'DOMAIN FIELD FAIL: not rendered for an existing object');
+    domSel && domSel.scrollIntoView(); await sleep(100);
+  },
+  // release 2 part 11: Add Table, end to end (dialog -> fill -> pick a domain -> Save -> a real editProject posted with ext.homeDomain set).
+  async 'index-file-add-table-save'(){
+    tb('Add').click(); await sleep(80); $$('.menu .mitem').find(b=>b.textContent==='Table').click(); await sleep(150);
+    $$('.modal input')[0].value='new_leads';
+    const schemaSel=$$('.modal select').find(s=>[...s.options].some(o=>o.textContent==='northwind.sales'));
+    schemaSel.value=[...schemaSel.options].find(o=>o.textContent==='northwind.sales').value;
+    const domSel=$$('.modal .field').find(f=>f.querySelector('span').textContent==='Domain').querySelector('select');
+    domSel.value=[...domSel.options].find(o=>o.textContent==='Sales').value;
+    mbtn('Save').click(); await sleep(200);
+    const posted=window.__posts.filter(p=>p.type==='editProject'), F=posted.length?JSON.parse(posted.at(-1).text):null;
+    const t=F&&F.tables.find(x=>x.name==='new_leads');
+    note('addtablecheck', `ADD TABLE ${t&&t.homeDomain==='Sales'?'PASS':'FAIL'}: posts=${posted.length} homeDomain=${t&&t.homeDomain}`);
+  },
+  // release 2 part 11: Add Schema, end to end — the Add menu row was disabled here before this pass (`ro`, not `roAdd`); Save posts a real
+  // editProject carrying the new schema (no Domain picker: a schema is routed by lib/project.js#applyProjectEdit, not chosen in the dialog).
+  async 'index-file-add-schema'(){
+    tb('Add').click(); await sleep(80); $$('.menu .mitem').find(b=>b.textContent==='Schema').click(); await sleep(150);
+    $$('.modal input')[0].value='staging';
+    mbtn('Save').click(); await sleep(200);
+    const posted=window.__posts.filter(p=>p.type==='editProject'), F=posted.length?JSON.parse(posted.at(-1).text):null;
+    note('addschemacheck', `ADD SCHEMA ${F&&F.schemas.some(s=>s.name==='staging')?'PASS':'FAIL'}: posts=${posted.length}`);
+  },
+  // release 2 part 11: Add Catalog, end to end — same reopening as Add Schema above (Northwind is a three-part project, so the row shows).
+  async 'index-file-add-catalog'(){
+    tb('Add').click(); await sleep(80); $$('.menu .mitem').find(b=>b.textContent==='Catalog').click(); await sleep(150);
+    $$('.modal input')[0].value='lake';
+    mbtn('Save').click(); await sleep(200);
+    const posted=window.__posts.filter(p=>p.type==='editProject'), F=posted.length?JSON.parse(posted.at(-1).text):null;
+    note('addcatalogcheck', `ADD CATALOG ${F&&F.catalogs.some(c=>c.name==='lake')?'PASS':'FAIL'}: posts=${posted.length}`);
+  },
+  // release 2 part 12: a merged, read-only history view for the project-index file's own tab — every PART's own log (parsed client-side,
+  // media/canvas.js#renderMergedHistoryList), merged chronologically, each entry tagged with the part (and domain) it belongs to, plus
+  // governance.json's own log (shared tags/policies). Three synthetic per-part logs (Sales/Catalog/HR — real SM.newHistory()/SM.commit(),
+  // the same technique the 'history-merge' scene above already uses), since a browser harness cannot `require` lib/project.js to build a
+  // real split project on disk (see NW_DOMAINS's own comment for the same reason). mkPartHistories is reused by the two scenes below it.
+  async mkPartHistories(){
+    const SM=StrataModel, now=Date.now();
+    const mk=(name,at1,at2)=>{ const h=SM.newHistory();
+      SM.commit(h,'modelling',null,{project:{name}},{user:'ada',email:'ada@x.io',system:'laptop',message:`${name}: baseline`,at:at1});
+      SM.commit(h,'modelling',SM.headsOf(h,'modelling')[0].chain,{project:{name},note:{v:1}},{user:'bob',email:'bob@x.io',system:'desktop',message:`${name}: added a note`,at:at2});
+      return SM.logText(h); };
+    return [
+      {name:'sales',model:'data_models/northwind/sales/sales.model.json',domain:'Sales',text:mk('sales',now-90000,now-30000)},
+      {name:'catalog',model:'data_models/northwind/catalog/catalog.model.json',domain:'Catalog',text:mk('catalog',now-80000,now-10000)},
+      {name:'hr',model:'data_models/northwind/hr/hr.model.json',domain:'HR',text:mk('hr',now-70000,now-60000)},
+      {name:'governance.json',domain:null,gov:true,text:mk('governance.json',now-50000,now-40000)},
+    ];
+  },
+  async 'index-file-history'(){
+    const histories=await scenes.mkPartHistories(), F0=JSON.parse(await ok('/northwind.model.json'));
+    window.postMessage({type:'model',text:JSON.stringify(F0),history:null,layoutFile:null,dataDir:'data',indexFile:true,readOnly:true,host:'vscode',projectView:true,histories},'*');
+    await sleep(300); tb('Version history').click(); await sleep(250);
+  },
+  // release 2 part 12, Part 1 of this pass: the stale-UI-after-save bug fix. This is the WEBVIEW-side half of the proof (media/canvas.js's
+  // handling of a second 'model' message — the exact refresh extension.js now sends after editProject/projectSettings/governance succeed —
+  // is idempotent: no duplicate cards, the new content replaces the old one at once); the HOST-side half (extension.js really calling
+  // postAssembledProject after each of the three writes, fail-before/pass-after) is tests/host.check.js, which drives the real extension.js.
+  async 'index-file-refresh'(){
+    const cardsBefore=$$('.card').map(c=>c.querySelector('.tname').textContent).sort();
+    const F0=JSON.parse(await ok('/northwind.model.json')); F0.project.description='Refreshed description (simulated repost)';
+    window.postMessage({type:'model',text:JSON.stringify(F0),history:null,layoutFile:null,dataDir:'data',indexFile:true,readOnly:true,host:'vscode',projectView:true},'*');
+    await sleep(300);
+    const cardsAfter=$$('.card').map(c=>c.querySelector('.tname').textContent).sort();
+    tb('Project settings').click(); await sleep(150);
+    const descEl=$$('.modal textarea')[0];
+    const pass=JSON.stringify(cardsBefore)===JSON.stringify(cardsAfter)&&descEl&&descEl.value==='Refreshed description (simulated repost)';
+    note('refreshcheck', `REFRESH ${pass?'PASS':'FAIL'}: cards=${cardsAfter.length} desc=${JSON.stringify(descEl&&descEl.value)}`);
+  },
+  // release 2 part 12, Part 2: the merged drawer's own Undo/Redo buttons — shown only in merged mode, posting real projectUndo/projectRedo
+  // messages (the actual cross-part file semantics are proven host-side, against real files, by tests/project.check.js#projectGoto and
+  // tests/host.check.js) — and hidden again the moment the tab is no longer showing the merged list.
+  async 'index-file-undo'(){
+    const histories=await scenes.mkPartHistories(), F0=JSON.parse(await ok('/northwind.model.json'));
+    window.postMessage({type:'model',text:JSON.stringify(F0),history:null,layoutFile:null,dataDir:'data',indexFile:true,readOnly:true,host:'vscode',projectView:true,histories},'*');
+    await sleep(300); tb('Version history').click(); await sleep(250);
+    const undoBtn=()=>$$('#history .dhr button').find(b=>b.textContent.includes('Undo')), redoBtn=()=>$$('#history .dhr button').find(b=>b.textContent.includes('Redo'));
+    const visibleMerged=!!undoBtn()&&!undoBtn().hidden&&!!redoBtn()&&!redoBtn().hidden;
+    const before=window.__posts.length;
+    undoBtn().click(); await sleep(80); redoBtn().click(); await sleep(80);
+    const posted=window.__posts.slice(before).map(p=>p.type);
+    // flip OUT of the merged view (an ordinary model message, no indexFile/histories) — the buttons must disappear, not just look disabled
+    window.postMessage({type:'model',text:JSON.stringify(F0),history:null,layoutFile:null,dataDir:'data'},'*');
+    await sleep(200);
+    const hiddenAfterFlip=!undoBtn()||undoBtn().hidden;
+    const pass=visibleMerged&&JSON.stringify(posted)===JSON.stringify(['projectUndo','projectRedo'])&&hiddenAfterFlip;
+    note('undocheck', `MERGED UNDO/REDO ${pass?'PASS':'FAIL'}: visible=${visibleMerged} posts=${JSON.stringify(posted)} hiddenAfterFlip=${hiddenAfterFlip}`);
+  },
+};
+(async()=>{ await sleep(600); try{ await scenes[SCENE](); }catch(e){ document.body.append(Object.assign(document.createElement('pre'),{textContent:'SCENE ERROR '+e.message,style:'position:fixed;top:0;left:0;color:red;background:#000;z-index:999'})); } document.title='ready'; })();
+</script></body></html>

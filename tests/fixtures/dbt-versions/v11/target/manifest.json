@@ -1,0 +1,425 @@
+{
+ "metadata": {
+  "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v11.json",
+  "dbt_version": "1.7.14",
+  "generated_at": "2024-05-01T10:00:00.000000Z",
+  "invocation_id": "x",
+  "project_name": "shop",
+  "adapter_type": "postgres"
+ },
+ "nodes": {
+  "model.shop.stg_orders": {
+   "name": "stg_orders",
+   "alias": "stg_orders",
+   "schema": "public",
+   "database": "db",
+   "resource_type": "model",
+   "package_name": "shop",
+   "unique_id": "model.shop.stg_orders",
+   "original_file_path": "models/stg_orders.sql",
+   "tags": [],
+   "description": "",
+   "columns": {
+    "id": {
+     "name": "id",
+     "description": ""
+    }
+   },
+   "meta": {},
+   "config": {
+    "materialized": "view"
+   },
+   "depends_on": {
+    "nodes": []
+   },
+   "raw_code": "select id, customer_id, amount from {{ source('raw', 'orders') }}"
+  },
+  "model.shop.customers": {
+   "name": "customers",
+   "alias": "customers",
+   "schema": "public",
+   "database": "db",
+   "resource_type": "model",
+   "package_name": "shop",
+   "unique_id": "model.shop.customers",
+   "original_file_path": "models/customers.sql",
+   "tags": [],
+   "description": "",
+   "columns": {
+    "id": {
+     "name": "id",
+     "description": ""
+    }
+   },
+   "meta": {},
+   "config": {
+    "materialized": "view"
+   },
+   "depends_on": {
+    "nodes": []
+   },
+   "raw_code": "select id, name from {{ source('raw', 'customers') }}"
+  },
+  "model.shop.orders_report": {
+   "name": "orders_report",
+   "alias": "orders_report",
+   "schema": "public",
+   "database": "db",
+   "resource_type": "model",
+   "package_name": "shop",
+   "unique_id": "model.shop.orders_report",
+   "original_file_path": "models/orders_report.sql",
+   "tags": [],
+   "description": "",
+   "columns": {},
+   "meta": {},
+   "config": {
+    "materialized": "view"
+   },
+   "depends_on": {
+    "nodes": []
+   },
+   "raw_code": "select c.name, sum(o.amount) as revenue from {{ ref('stg_orders') }} o join {{ ref('customers') }} c on o.customer_id = c.id group by c.name"
+  },
+  "test.shop.unique_stg_orders_id.abc": {
+   "name": "unique_stg_orders_id",
+   "alias": "unique_stg_orders_id",
+   "schema": "public_dbt_test__audit",
+   "database": "db",
+   "resource_type": "test",
+   "package_name": "shop",
+   "unique_id": "test.shop.unique_stg_orders_id.abc",
+   "original_file_path": "models/schema.yml",
+   "tags": [],
+   "column_name": "id",
+   "test_metadata": {
+    "name": "unique",
+    "kwargs": {
+     "column_name": "id",
+     "model": "{{ get_where_subquery(ref('stg_orders')) }}"
+    },
+    "namespace": null
+   },
+   "config": {
+    "materialized": "test"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.shop.stg_orders"
+    ]
+   },
+   "raw_code": "{{ test_unique(**_dbt_generic_test_kwargs) }}",
+   "attached_node": "model.shop.stg_orders"
+  },
+  "test.shop.not_null_stg_orders_id.abc": {
+   "name": "not_null_stg_orders_id",
+   "alias": "not_null_stg_orders_id",
+   "schema": "public_dbt_test__audit",
+   "database": "db",
+   "resource_type": "test",
+   "package_name": "shop",
+   "unique_id": "test.shop.not_null_stg_orders_id.abc",
+   "original_file_path": "models/schema.yml",
+   "tags": [],
+   "column_name": "id",
+   "test_metadata": {
+    "name": "not_null",
+    "kwargs": {
+     "column_name": "id",
+     "model": "{{ get_where_subquery(ref('stg_orders')) }}"
+    },
+    "namespace": null
+   },
+   "config": {
+    "materialized": "test"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.shop.stg_orders"
+    ]
+   },
+   "raw_code": "{{ test_not_null(**_dbt_generic_test_kwargs) }}",
+   "attached_node": "model.shop.stg_orders"
+  },
+  "test.shop.unique_customers_id.abc": {
+   "name": "unique_customers_id",
+   "alias": "unique_customers_id",
+   "schema": "public_dbt_test__audit",
+   "database": "db",
+   "resource_type": "test",
+   "package_name": "shop",
+   "unique_id": "test.shop.unique_customers_id.abc",
+   "original_file_path": "models/schema.yml",
+   "tags": [],
+   "column_name": "id",
+   "test_metadata": {
+    "name": "unique",
+    "kwargs": {
+     "column_name": "id",
+     "model": "{{ get_where_subquery(ref('customers')) }}"
+    },
+    "namespace": null
+   },
+   "config": {
+    "materialized": "test"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.shop.customers"
+    ]
+   },
+   "raw_code": "{{ test_unique(**_dbt_generic_test_kwargs) }}",
+   "attached_node": "model.shop.customers"
+  },
+  "test.shop.not_null_customers_id.abc": {
+   "name": "not_null_customers_id",
+   "alias": "not_null_customers_id",
+   "schema": "public_dbt_test__audit",
+   "database": "db",
+   "resource_type": "test",
+   "package_name": "shop",
+   "unique_id": "test.shop.not_null_customers_id.abc",
+   "original_file_path": "models/schema.yml",
+   "tags": [],
+   "column_name": "id",
+   "test_metadata": {
+    "name": "not_null",
+    "kwargs": {
+     "column_name": "id",
+     "model": "{{ get_where_subquery(ref('customers')) }}"
+    },
+    "namespace": null
+   },
+   "config": {
+    "materialized": "test"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.shop.customers"
+    ]
+   },
+   "raw_code": "{{ test_not_null(**_dbt_generic_test_kwargs) }}",
+   "attached_node": "model.shop.customers"
+  },
+  "test.shop.rel_orders_customer.abc": {
+   "name": "rel_orders_customer",
+   "alias": "rel_orders_customer",
+   "schema": "public_dbt_test__audit",
+   "database": "db",
+   "resource_type": "test",
+   "package_name": "shop",
+   "unique_id": "test.shop.rel_orders_customer.abc",
+   "original_file_path": "models/schema.yml",
+   "tags": [],
+   "column_name": "customer_id",
+   "test_metadata": {
+    "name": "relationships",
+    "kwargs": {
+     "column_name": "customer_id",
+     "model": "{{ get_where_subquery(ref('stg_orders')) }}",
+     "to": "ref('customers')",
+     "field": "id"
+    },
+    "namespace": null
+   },
+   "config": {
+    "materialized": "test"
+   },
+   "depends_on": {
+    "nodes": [
+     "model.shop.stg_orders",
+     "model.shop.customers"
+    ]
+   },
+   "raw_code": "{{ test_relationships(**_dbt_generic_test_kwargs) }}",
+   "attached_node": "model.shop.stg_orders"
+  }
+ },
+ "sources": {
+  "source.shop.raw.orders": {
+   "name": "orders",
+   "source_name": "raw",
+   "identifier": "orders",
+   "schema": "raw",
+   "database": "db",
+   "resource_type": "source",
+   "package_name": "shop",
+   "unique_id": "source.shop.raw.orders",
+   "tags": [],
+   "description": "",
+   "columns": {
+    "id": {
+     "name": "id",
+     "description": ""
+    },
+    "customer_id": {
+     "name": "customer_id",
+     "description": ""
+    },
+    "amount": {
+     "name": "amount",
+     "description": ""
+    }
+   },
+   "meta": {}
+  },
+  "source.shop.raw.customers": {
+   "name": "customers",
+   "source_name": "raw",
+   "identifier": "customers",
+   "schema": "raw",
+   "database": "db",
+   "resource_type": "source",
+   "package_name": "shop",
+   "unique_id": "source.shop.raw.customers",
+   "tags": [],
+   "description": "",
+   "columns": {
+    "id": {
+     "name": "id",
+     "description": ""
+    },
+    "name": {
+     "name": "name",
+     "description": ""
+    }
+   },
+   "meta": {}
+  }
+ },
+ "semantic_models": {
+  "semantic_model.shop.orders": {
+   "name": "orders",
+   "unique_id": "semantic_model.shop.orders",
+   "resource_type": "semantic_model",
+   "package_name": "shop",
+   "model": "ref('stg_orders')",
+   "depends_on": {
+    "nodes": [
+     "model.shop.stg_orders"
+    ]
+   },
+   "node_relation": {
+    "alias": "stg_orders",
+    "schema_name": "public",
+    "database": "db",
+    "relation_name": "\"db\".\"public\".\"stg_orders\""
+   },
+   "entities": [
+    {
+     "name": "order",
+     "type": "primary",
+     "expr": "id"
+    },
+    {
+     "name": "customer",
+     "type": "foreign",
+     "expr": "customer_id"
+    }
+   ],
+   "dimensions": [
+    {
+     "name": "created_at",
+     "type": "time",
+     "expr": "created_at"
+    }
+   ],
+   "measures": [
+    {
+     "name": "order_total",
+     "agg": "sum",
+     "expr": "amount",
+     "description": "Sum of amount"
+    }
+   ]
+  },
+  "semantic_model.shop.customers": {
+   "name": "customers",
+   "unique_id": "semantic_model.shop.customers",
+   "resource_type": "semantic_model",
+   "package_name": "shop",
+   "model": "ref('customers')",
+   "depends_on": {
+    "nodes": [
+     "model.shop.customers"
+    ]
+   },
+   "entities": [
+    {
+     "name": "customer",
+     "type": "primary",
+     "expr": "id"
+    }
+   ],
+   "dimensions": [
+    {
+     "name": "name",
+     "type": "categorical"
+    }
+   ],
+   "measures": []
+  }
+ },
+ "metrics": {
+  "metric.shop.revenue": {
+   "name": "revenue",
+   "label": "Revenue",
+   "description": "Order value",
+   "type": "simple",
+   "type_params": {
+    "measure": {
+     "name": "order_total"
+    }
+   },
+   "filter": {
+    "where_filters": [
+     {
+      "where_sql_template": "{{ Dimension('order__status') }} = 'x'"
+     }
+    ]
+   },
+   "unique_id": "metric.shop.revenue",
+   "resource_type": "metric",
+   "package_name": "shop",
+   "tags": []
+  },
+  "metric.shop.revenue_ratio": {
+   "name": "revenue_ratio",
+   "label": "Revenue ratio",
+   "type": "ratio",
+   "type_params": {
+    "numerator": {
+     "name": "revenue"
+    },
+    "denominator": {
+     "name": "revenue"
+    }
+   },
+   "unique_id": "metric.shop.revenue_ratio",
+   "resource_type": "metric",
+   "package_name": "shop",
+   "tags": []
+  },
+  "metric.shop.conv": {
+   "name": "conv",
+   "type": "conversion",
+   "type_params": {
+    "conversion_type_params": {}
+   },
+   "unique_id": "metric.shop.conv",
+   "resource_type": "metric",
+   "package_name": "shop",
+   "tags": []
+  }
+ },
+ "saved_queries": {
+  "saved_query.shop.sq": {
+   "name": "sq"
+  }
+ },
+ "exposures": {
+  "exposure.shop.dash": {
+   "name": "dash"
+  }
+ }
+}

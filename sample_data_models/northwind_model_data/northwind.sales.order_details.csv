@@ -1,0 +1,4 @@
+order_id,product_id,unit_price,quantity,discount
+10248,1,18.00,12,0.00
+10248,2,19.00,10,0.05
+10248,3,10.00,5,0.00

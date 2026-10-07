@@ -1,0 +1,16 @@
+# dependencies are downloaded by `npm ci` (or by the build scripts when they need one) and never committed
+node_modules/
+
+# the staged npm package of the command line (scripts/build-cli.js)
+dist/
+
+# Docker: the package tarball used to test the image before it is published
+docker/pkg/*
+!docker/pkg/.gitkeep
+
+# built extension packages, and one person's window state when the repository is opened in the editor
+*.vsix
+.strata/
+.claude/
+.github/
+.docs/

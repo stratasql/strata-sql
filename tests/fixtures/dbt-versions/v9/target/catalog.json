@@ -1,0 +1,38 @@
+{
+ "metadata": {
+  "dbt_schema_version": "https://schemas.getdbt.com/dbt/catalog/v1.json",
+  "dbt_version": "1.5.9",
+  "generated_at": "2024-05-01T10:00:00.000000Z"
+ },
+ "errors": null,
+ "nodes": {
+  "model.shop.stg_orders": {
+   "metadata": {
+    "type": "VIEW",
+    "schema": "public",
+    "name": "stg_orders",
+    "database": "db"
+   },
+   "columns": {
+    "id": {
+     "type": "integer",
+     "index": 1,
+     "name": "id"
+    },
+    "customer_id": {
+     "type": "integer",
+     "index": 2,
+     "name": "customer_id"
+    },
+    "amount": {
+     "type": "numeric",
+     "index": 3,
+     "name": "amount"
+    }
+   },
+   "stats": {},
+   "unique_id": "model.shop.stg_orders"
+  }
+ },
+ "sources": {}
+}

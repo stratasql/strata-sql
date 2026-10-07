@@ -1,0 +1,34 @@
+# Development and CI
+CONTRIBUTING.md
+.claude/
+.vscode/
+tests/
+# Dependencies are not shipped, except the SQL parser of the dbt import (ADR-0050): node-sql-parser's single-file build and its one dependency (~2.5 MB of the ~90 MB it installs).
+# Everything else in node_modules stays out, as before (@huggingface/transformers included).
+node_modules/**
+!node_modules/node-sql-parser/package.json
+!node_modules/node-sql-parser/LICENSE
+!node_modules/node-sql-parser/index.js
+!node_modules/big-integer/package.json
+!node_modules/big-integer/LICENSE
+!node_modules/big-integer/BigInteger.js
+
+# Small demo model used in development (not shipped). The Northwind, FpML and star samples ARE shipped:
+# Strata SQL: Open Sample Model and the New Project wizard create a project from sample_data_models/northwind.* / fpml.* / star.* and their *_model_data/ folders in the foldered layout.
+sample_data_models/example.*
+sample_data_models/example_model_data/
+
+# Conversation / session artefacts
+
+# Output artefacts
+*.vsix
+
+# Not part of the extension: the npm package is staged in dist/ and the image is built from docker/ (both published separately by scripts/publish.js),
+# the notes in .docs/ are internal, and .strata/ is a person's own window state
+dist/
+scripts/
+docker/
+.strata/
+.claude/
+.github/
+.docs/

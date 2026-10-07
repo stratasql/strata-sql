@@ -1,0 +1,4 @@
+day_count_fraction_code,day_count_fraction_name,description,is_active
+ACT/360,Actual/360,Actual days over a 360-day year,true
+30/360,30/360,30-day months over a 360-day year,true
+ACT/ACT.ISDA,Actual/Actual ISDA,Actual days over the actual year length,true

@@ -1,0 +1,11 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/media/nav.css">
+<style>:root{--vscode-font-family:-apple-system,"Segoe UI",sans-serif;--vscode-foreground:#ccc;--vscode-input-background:#313131;--vscode-input-foreground:#ccc;--vscode-dropdown-background:#313131;--vscode-dropdown-foreground:#ccc;--vscode-list-hoverBackground:#2a2d2e;--vscode-panel-border:#2b2b2b;--vscode-charts-yellow:#cca700;--vscode-charts-blue:#3794ff;--vscode-focusBorder:#0078d4}body{background:#181818;width:320px;height:600px;overflow:hidden}</style></head>
+<body><div id="app"></div>
+<script>window.__posts=[];window.acquireVsCodeApi=()=>({postMessage:(m)=>{window.__posts.push(m);}});</script><script src="/media/nav.js"></script>
+<script>(async()=>{const Q=new URLSearchParams(location.search),M=Q.get('model')||'northwind';const t=await fetch('/'+M+'.model.json').then(r=>r.text());window.postMessage({type:'model',text:t,file:M+'.model.json',layoutKey:M+'.model.json',layout:Q.get('layout')?JSON.parse(Q.get('layout')):null},'*');await new Promise(r=>setTimeout(r,100));
+const click=(s)=>[...document.querySelectorAll('#tree .r')].find(e=>e.textContent.includes(s)).click();
+if(Q.get('gov')){ // metrics and policies: collapse the other sections, open the policy group
+  for(const t of ['Concepts and entities','Relationships','Tags']){[...document.querySelectorAll('#tree .sec')].find(e=>e.textContent.includes(t)).click();await new Promise(r=>setTimeout(r,40));}
+  click('Data Protection');await new Promise(r=>setTimeout(r,60));}
+else if(!Q.get('model'))for(const s of ['northwind','sales','orders']){click(s);await new Promise(r=>setTimeout(r,60));}
+document.title='ready';})();</script></body></html>

@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "strata: open dev host",
+      "type": "shell",
+      "command": "code",
+      "args": [
+        "--new-window",
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--inspect-brk-extensions=9333"
+      ],
+      "presentation": { "reveal": "silent" },
+      "problemMatcher": []
+    }
+  ]
+}

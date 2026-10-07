@@ -1,0 +1,2 @@
+swap_stream_id,floating_rate_index_code,index_tenor_multiplier,index_tenor_unit_code,spread,cap_rate,floor_rate,initial_rate
+2,EUR-EURIBOR-Reuters,6,M,0.00000000,,,

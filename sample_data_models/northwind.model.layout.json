@@ -1,0 +1,65 @@
+{
+  "strata": "layout/1",
+  "positions": {
+    "conceptual": {
+      "Customer": [370, 0],
+      "Employee": [370, 256],
+      "Location": [0, 128],
+      "Order": [740, 0],
+      "Product": [1110, 0],
+      "Sales Territory": [740, 176],
+      "Shipper": [0, 0],
+      "Supplier": [370, 128]
+    },
+    "logical": {
+      "Address": [1520, 570],
+      "Country": [1150, 618],
+      "Customer": [390, 570],
+      "Customer Segment": [760, 630],
+      "Employee": [0, 0],
+      "Order": [390, 0],
+      "Order Line": [760, 60],
+      "Product": [1520, 0],
+      "Product Category": [1150, 72],
+      "Region": [0, 984],
+      "Shipper": [760, 972],
+      "Supplier": [0, 570],
+      "Territory": [370, 972]
+    },
+    "physical": {
+      "northwind.hr.employee_territories": [2240, 144],
+      "northwind.hr.employees": [1500, 0],
+      "northwind.hr.regions": [1500, 436],
+      "northwind.hr.territories": [1870, 132],
+      "northwind.product.categories": [0, 1038],
+      "northwind.product.products": [370, 966],
+      "northwind.product.suppliers": [0, 1234],
+      "northwind.ref.addresses": [2260, 966],
+      "northwind.ref.countries": [1890, 1014],
+      "northwind.reporting.alphabetical_list_of_products": [0, 0],
+      "northwind.reporting.current_product_list": [0, 364],
+      "northwind.reporting.customers_and_suppliers_by_city": [0, 512],
+      "northwind.reporting.employee_directory_masked": [370, 0],
+      "northwind.reporting.invoices": [370, 244],
+      "northwind.reporting.mv_monthly_sales_summary": [740, 0],
+      "northwind.reporting.mv_sales_by_category_year": [740, 220],
+      "northwind.reporting.order_details_extended": [740, 440],
+      "northwind.reporting.order_subtotals": [740, 708],
+      "northwind.reporting.products_above_average_price": [1110, 0],
+      "northwind.sales.customer_customer_demo": [1500, 966],
+      "northwind.sales.customer_demographics": [1130, 966],
+      "northwind.sales.customers": [760, 987],
+      "northwind.sales.order_details": [1500, 1174],
+      "northwind.sales.orders": [1130, 1114],
+      "northwind.sales.shippers": [760, 1255]
+    },
+    "semantic": {
+      "Average Order Value": [370, 500],
+      "northwind.sales.order_details": [370, 60],
+      "northwind.sales.orders": [0, 0],
+      "Order Count": [0, 512],
+      "Revenue": [0, 636],
+      "Units Sold": [0, 808]
+    }
+  }
+}

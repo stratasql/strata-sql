@@ -1,0 +1,5 @@
+period_unit_code,period_unit_name,description,is_active
+D,Day,,true
+W,Week,,true
+M,Month,,true
+Y,Year,,true

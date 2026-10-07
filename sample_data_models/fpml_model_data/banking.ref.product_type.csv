@@ -1,0 +1,4 @@
+product_type_code,product_type_name,asset_class_code,fpml_element,description,is_active
+InterestRateSwap,Interest Rate Swap,InterestRate,swap,,true
+FxSingleLeg,FX Single Leg,ForeignExchange,fxSingleLeg,,true
+CreditDefaultSwap,Credit Default Swap,Credit,creditDefaultSwap,,true

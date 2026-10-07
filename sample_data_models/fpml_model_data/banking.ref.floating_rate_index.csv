@@ -1,0 +1,3 @@
+floating_rate_index_code,floating_rate_index_name,currency_code,administrator,description,is_active
+USD-SOFR-OIS Compound,SOFR OIS Compound,USD,NY Fed,,true
+EUR-EURIBOR-Reuters,EURIBOR,EUR,EMMI,,true
